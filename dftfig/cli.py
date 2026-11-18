@@ -8,6 +8,7 @@ so anything you can click you can also script:
     dft run              run every stage
     dft run opt sp       run selected stages
     dft status           what is done and what is missing
+    dft verify           re-check every file against runs/manifest.json
     dft params [KEY]     the parameter reference
     dft figures          rebuild the figures only
     dft init             scaffold config.yaml, molecules/ and data/ in this folder
@@ -60,6 +61,8 @@ MENU = [
      "Show where the figures, cubes and tables were written"),
     ("8", "Check this machine", "doctor",
      "ORCA, PyMOL, cores, memory and Python packages - run this first if something fails"),
+    ("9", "Verify results", "verify",
+     "Check every input, output, cube and figure against the run manifest"),
     ("q", "Quit", "quit", ""),
 ]
 
@@ -356,6 +359,9 @@ def interactive(cfg_path: Path) -> int:
             key = Prompt.ask("  [brand]parameter key[/brand] "
                              "[muted](blank = all)[/muted]", default="", console=console)
             show_params(key or None)
+        elif action == "verify":
+            if _ensure_config(cfg_path):
+                _run_stage(cfg_path, ["verify"])
         elif action == "doctor":
             _doctor()
         elif action == "open":
@@ -430,8 +436,11 @@ def main(argv=None) -> int:
         except (KeyboardInterrupt, EOFError):
             console.print("\n  [muted]interrupted[/muted]\n")
             return 130
-    if cmd in STAGES or cmd in ("status", "validate"):
-        if cmd not in ("status", "validate") and not _ensure_config(cfg_path):
+    if cmd in STAGES or cmd in ("status", "validate", "verify"):
+        # status, validate and verify only read what is already on disk, so a missing
+        # config is their answer rather than a reason to open the wizard. `verify`
+        # returns the pipeline's exit code unchanged: it is meant to be used in a script.
+        if cmd not in ("status", "validate", "verify") and not _ensure_config(cfg_path):
             return 2
         return _run_stage(cfg_path, [cmd])
 

@@ -107,6 +107,7 @@ dft run           # walk every setting, then run the whole pipeline
 dft run opt sp    # selected stages only, no questions
 dft figures       # rebuild the figures without redoing DFT
 dft status        # what is done, what is missing, what is not a minimum
+dft verify        # re-check every file against runs/manifest.json (§3b)
 dft validate      # check settings against this machine's cores and RAM
 dft doctor        # ORCA, PyMOL, cores, memory, packages
 dft params        # the full parameter reference
@@ -273,6 +274,7 @@ runs/
     fukui_CCB1_water.csv            f+, f-, f0, Δf, Δω per atom
   descriptors.csv                   one row per molecule × medium
   manifest_{opt,sp,fukui}.json      per-job status, wall time, energies
+  manifest.json                     provenance: versions, settings hash, SHA-256 per file
   figures/
     figure2.{png,pdf}  figure12.*  figure13.*  figure14.*
     properties_resolved.csv         what the figures actually used
@@ -281,6 +283,97 @@ runs/
 Every `.cube` opens directly in **Avogadro** or **GaussView** if you want to look around
 interactively, and every `.pml` can be opened in PyMOL (`pymol render_mep_CCB1.pml`) to adjust a
 camera angle by hand and re-save.
+
+---
+
+## 3b. Provenance — tracing a number back to its calculation
+
+A figure in a manuscript is a claim. Six months later, a reviewer asks which functional produced
+panel B, or a co-author sends back `descriptors.csv` with one value that looks wrong — and nobody
+can tell whether it came from the run that made the figure. Every run therefore records what
+produced it, in three places.
+
+**In `descriptors.csv`.** Five columns at the end of every row:
+
+| column | what it is |
+|---|---|
+| `dftfig_version` | the version of this package that wrote the row |
+| `orca_version` | parsed from that molecule's own output banner — not from the ORCA installed today |
+| `orca_keywords_opt` | the literal `!` line of the optimization job |
+| `orca_keywords_sp` | the literal `!` line of the property single point |
+| `config_sha` | short hash of the settings that can change a number |
+
+The two keyword lines are read back out of the ORCA output's own echo of its input, so they are
+what ran, not what the config intended: the runner rewrites `%pal` when Open MPI refuses the
+requested slot count, and a saddle-point restart appends keywords (§8b).
+
+**`config_sha`** answers one question: *are these two results comparable?* It hashes the resolved
+configuration — serialized to YAML with sorted keys — after dropping everything that cannot change
+a number:
+
+- the whole `render` and `figures` sections (camera, isovalues, colours, DPI, formats, layout);
+- `execution.nprocs`, `execution.maxcore_mb`, `execution.max_parallel_jobs`, `cubes.esp_nprocs`
+  (parallelism and memory), `execution.work_dir`, `execution.scratch_dir`, `execution.orca_path`
+  and `execution.resume`.
+
+So the same chemistry run on a six-core laptop and on a 64-core node gives the **same**
+`config_sha`, and changing the functional, a basis set, the solvation model, the population
+scheme, the integration grid, an SCF threshold or the molecule set gives a **different** one. If
+the hash matches, the two numbers were produced by the same recipe. One caveat worth knowing:
+`figures.reference_solvent` is excluded with the rest of its section, so it selects which medium
+the Fukui table was built for without changing the hash — but the medium is in the file name and
+in the `medium` column.
+
+**In `runs/manifest.json`**, written at the end of every run (including a single re-run stage,
+because a stale manifest is worse than none):
+
+```json
+{
+  "dftfig_version": "1.4.0",
+  "orca_version": "6.1.0",
+  "generated_utc": "2026-03-04T11:42:07Z",
+  "platform": {"system": "Linux-6.8.0-x86_64", "machine": "x86_64", "python": "3.11.8"},
+  "config_sha": "20cc2d7027f8",
+  "config": { "...the whole resolved configuration..." },
+  "files": [
+    {"path": "CCB1/water/CCB1_water_sp.out", "bytes": 1840221, "sha256": "9f86d0…"},
+    {"path": "figures/figure2.png",          "bytes":  612004, "sha256": "e3b0c4…"}
+  ]
+}
+```
+
+Every input, output, geometry, cube, table, PyMOL script and figure is listed with its size and
+SHA-256. `.gbw` and `.hess` are not: they are large binary restart files that ORCA does not write
+byte-identically twice, so hashing them would report differences that mean nothing.
+
+**On Figure 2.** The method stamp along the bottom carries a second line, `dftfig 1.4.0 | config
+20cc2d7027f8`. That is enough to match a printed figure to a row in `descriptors.csv` and to the
+run directory it came from.
+
+### Checking a run with `dft verify`
+
+```bash
+dft verify                     # uses ./config.yaml
+dft verify -c path/to/config.yaml
+```
+
+It re-hashes everything the manifest lists and reports three kinds of disagreement:
+
+- **missing** — a listed file is gone;
+- **changed** — a file's bytes differ from what was recorded (a figure re-saved by hand, a CSV
+  edited in a spreadsheet, a corrupted copy);
+- **not in the manifest** — a tracked file exists that the manifest does not list, which means the
+  manifest is out of date.
+
+It exits `0` only when everything agrees, so it can be used as a gate:
+
+```bash
+dft verify && cp runs/figures/figure2.pdf ~/manuscript/
+```
+
+Any disagreement exits `1`; a missing manifest exits `2`. The usual cause of "changed" is honest —
+somebody re-rendered a figure without re-running the stage — and the fix is to re-run the stage so
+the manifest describes what is actually on disk.
 
 ---
 

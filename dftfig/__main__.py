@@ -5,6 +5,8 @@
     python -m dftfig all -c config.yaml     run everything
     python -m dftfig <stage> -c config.yaml run one stage
 
+    python -m dftfig verify -c config.yaml   re-check runs/manifest.json against disk
+
 Stages, in order: build, opt, sp, fukui, cubes, descriptors, figures.
 """
 from __future__ import annotations
@@ -410,7 +412,8 @@ def stage_status(cfg, specs=None):
 def main(argv=None):
     ap = argparse.ArgumentParser(prog="dftfig", description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
-    ap.add_argument("stage", choices=STAGES + ["all", "wizard", "params", "status", "validate"])
+    ap.add_argument("stage", choices=STAGES + ["all", "wizard", "params", "status",
+                                               "validate", "verify"])
     ap.add_argument("-c", "--config", default="config.yaml")
     ap.add_argument("--key", default=None, help="with 'params': show one parameter")
     ap.add_argument("--no-advanced", action="store_true",
@@ -446,6 +449,9 @@ def main(argv=None):
         for a in C.advisories(cfg):
             warn(a)
         return 0
+    if args.stage == "verify":
+        from . import provenance
+        return provenance.verify_report(cfg)
     if args.stage == "status":
         try:
             stage_status(cfg)
@@ -480,6 +486,18 @@ def main(argv=None):
             made = stage_figures(cfg, specs, df)
             for p in made:
                 ok(str(p))
+
+    # The manifest is rewritten after whichever stages ran, not only after `all`.
+    # Re-rendering a figure or re-running one single point changes what is on disk, and
+    # a manifest still describing the previous state is worse than no manifest: it would
+    # make `dft verify` certify files that are no longer the ones it hashed.
+    from . import provenance
+    try:
+        provenance.write(cfg)
+    except OSError as e:
+        # A run whose numbers are already on disk must not be reported as failed because
+        # the provenance record could not be written.
+        warn(f"could not write the provenance manifest: {e}")
     return 0
 
 

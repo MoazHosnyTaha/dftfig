@@ -42,6 +42,41 @@ def terminated_normally(src) -> bool:
     return "****ORCA TERMINATED NORMALLY****" in _text(src)
 
 
+def program_version(src) -> str:
+    """The ORCA version that produced this output, e.g. '6.1.0'. Empty if absent.
+
+    Read from the banner the job itself printed, never by running ORCA again:
+    discover.orca_version() starts a throwaway H2 calculation, which is both slow and -
+    worse for provenance - reports the ORCA that is installed TODAY rather than the one
+    that computed the numbers being labelled. A resumed run can legitimately contain
+    outputs from two versions, and only the files can say so.
+    """
+    m = re.search(r"Program Version\s+(\S+)", _text(src))
+    return m.group(1) if m else ""
+
+
+def input_keyword_line(src) -> str:
+    """The literal '!' keyword line of the job, from the input echo in its own output.
+
+    ORCA reproduces the input file verbatim under 'INPUT FILE', each line prefixed with
+    '|  7> '. Taking the line from there rather than re-deriving it from the config is
+    the point: the runner rewrites inputs in place when MPI refuses the requested slot
+    count, and a saddle-point restart appends keywords, so the config and the line that
+    actually ran can differ. Keywords may be split over several '!' lines; they are
+    joined back into one.
+    """
+    txt = _text(src)
+    if "INPUT FILE" not in txt:
+        return ""
+    block = txt.split("INPUT FILE", 1)[1].split("****END OF INPUT****", 1)[0]
+    parts = []
+    for line in block.splitlines():
+        body = re.sub(r"^\s*\|\s*\d+>\s?", "", line).strip()
+        if body.startswith("!"):
+            parts.append(body.lstrip("!").strip())
+    return ("! " + " ".join(p for p in parts if p)) if parts else ""
+
+
 def final_energy(src) -> float | None:
     hits = re.findall(r"FINAL SINGLE POINT ENERGY\s+(-?\d+\.\d+)", _text(src))
     return float(hits[-1]) if hits else None

@@ -7,6 +7,33 @@ and this project uses [semantic versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- Provenance (`dftfig/provenance.py`), so every number and figure can be traced to the
+  calculation that produced it:
+  - `descriptors.csv` gains `dftfig_version`, `orca_version`, `orca_keywords_opt`,
+    `orca_keywords_sp` and `config_sha`. The ORCA version and both keyword lines are
+    read from the output files themselves, never by starting ORCA again.
+  - `config_sha` is a 12-character hash of the resolved configuration, excluding what
+    cannot change a number: the whole `render` and `figures` sections, plus
+    `execution.work_dir`, `execution.scratch_dir`, `execution.orca_path`,
+    `execution.nprocs`, `execution.maxcore_mb`, `execution.max_parallel_jobs`,
+    `execution.resume` and `cubes.esp_nprocs`. The same chemistry run on a laptop and on
+    a cluster hashes identically; a different functional, basis, solvation model,
+    population scheme, grid, threshold or molecule set does not.
+  - `runs/manifest.json`, written at the end of every run: versions, an ISO-8601 UTC
+    timestamp, the platform, the resolved config, the `config_sha`, and the path, size
+    and SHA-256 of every input, output, geometry, cube, table, PyMOL script and figure.
+  - `dft verify` (`python -m dftfig verify`) re-checks that manifest against the disk and
+    reports files that are missing, changed or unlisted. It exits 0 only when everything
+    agrees, 1 on any disagreement and 2 when there is no manifest, so it can gate a
+    publication script.
+  - Figure 2's method stamp carries a second line with the dftfig version and the
+    `config_sha`, which is what links a printed figure to a row of `descriptors.csv`.
+- `parsers.program_version()` and `parsers.input_keyword_line()`: the ORCA version and the
+  literal `!` keyword line, both read out of an existing output file.
+- `tests/test_provenance.py` with a real ORCA 6.1.0 output as a fixture
+  (`tests/data/ANIL_water_sp.out`): hash stability under core-count changes, hash
+  sensitivity to functional and basis, the manifest round-trip through `dft verify`, and
+  the version parser.
 - `dft doctor`: reports ORCA, PyMOL, physical and logical core counts, memory and
   Python packages, so a new user can diagnose their own machine before asking for help.
 - Automatic discovery of ORCA and PyMOL (`dftfig/discover.py`). Checks `$ORCA_PATH`,
