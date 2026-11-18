@@ -29,6 +29,7 @@ import pandas as pd
 
 from . import molecules as _M
 from . import parsers
+from . import provenance
 from .orca_io import DIELECTRIC
 from .parsers import HARTREE_TO_EV
 from .theme import bad, ok, warn
@@ -59,6 +60,10 @@ def collect(cfg: dict) -> pd.DataFrame:
     mode = cfg["property"]["koopmans_mode"]
     _restarts = _saddle_restarts(work)
     _flat = _flat_modes(work)
+    # The version and the config hash are properties of the run, so they are computed
+    # once; the ORCA version and the keyword lines are read per row from the files that
+    # row was built from, because a resumed directory can legitimately mix them.
+    _stamp = provenance.stamp(cfg)
     rows = []
 
     for name in _M.names(cfg):
@@ -130,6 +135,17 @@ def collect(cfg: dict) -> pd.DataFrame:
                 row["saddle_restarts"] = 0
             row["flat_mode"] = bool(_flat.get((row.get("molecule"), row.get("medium"))))
             row["warnings"] = "; ".join(notes)
+
+            # --- provenance: what produced this row -------------------------------
+            # Last, so the chemistry stays in the leading columns, but in the same file:
+            # a descriptors.csv that has been copied into a manuscript directory still
+            # carries the version, the ORCA that ran, the two keyword lines and the
+            # settings hash. `dftfig_version` and `config_sha` are also stamped on
+            # Figure 2, which is what lets a printed figure be matched back to a row.
+            row["dftfig_version"] = _stamp["dftfig_version"]
+            row["orca_version"] = provenance.orca_version_of(sp)
+            row.update(provenance.keyword_lines(cfg, name, solvent))
+            row["config_sha"] = _stamp["config_sha"]
             rows.append(row)
 
     df = pd.DataFrame(rows)

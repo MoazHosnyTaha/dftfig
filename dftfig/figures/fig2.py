@@ -10,7 +10,7 @@ import pandas as pd
 from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.gridspec import GridSpec
 
-from .. import cubes, render
+from .. import cubes, provenance, render
 from ..figstyle import (apply_style, band_letter, cell_caption,
                         pad_to_common_aspect,
                         show_image, trim_white)
@@ -198,16 +198,25 @@ def build(cfg: dict, mols: dict, descriptors: pd.DataFrame | None = None) -> lis
 
     eps = DIELECTRIC.get(solvent, float("nan"))
     level = _level_string(cfg)
+    _prov = provenance.stamp(cfg)
     fig.suptitle(
         f"Optimized geometry, frontier orbitals and electrostatic potential in "
         f"{solvent} ($\\epsilon$ = {eps:g})",
         fontsize=9.5, y=0.985, x=0.055, ha="left")
     mep_note = ("scaled per panel" if mode == "per_panel"
                 else f"range {vrange[0]:+.3f} to {vrange[1]:+.3f} a.u., shared")
-    fig.text(0.055, 0.008,
+    fig.text(0.055, 0.021,
              f"{level}   |   orbital isosurface $\\pm${cfg['render']['orbital_isovalue']} a.u."
              f"   |   density isosurface {cfg['render']['density_isovalue']} a.u."
              f"   |   MEP {mep_note}",
+             fontsize=6.5, ha="left", va="bottom", color="#707070")
+    # Provenance on its own line rather than appended to the method line: that line is
+    # already near the figure width at print size, and the two identifiers below are what
+    # a reader needs to find the run - the config hash matches the config_sha column in
+    # descriptors.csv and the one in runs/manifest.json. Two short fields, no date and no
+    # file paths: anything longer stops being read.
+    fig.text(0.055, 0.006,
+             f"dftfig {_prov['dftfig_version']}   |   config {_prov['config_sha']}",
              fontsize=6.5, ha="left", va="bottom", color="#707070")
 
     return _save(cfg, fig, "figure2")
