@@ -159,17 +159,27 @@ def build(cfg: dict, mols: dict, prop_df: pd.DataFrame) -> list[Path]:
                 clusters.append({"x": x, "y": y, "members": [(n, m)]})
 
         # Two compounds at the same TPSA but different logD are not merged into one
-        # label, and their texts still overlap if both are offset the same way. Alternate
-        # the vertical offset along the x order so neighbours separate.
+        # label, and their texts still overlap if both are offset the same way.
+        #
+        # The vertical side is decided by where the point sits, not by its index: a
+        # label pushed DOWN from a point near the bottom of the axes lands on the
+        # "clogD <= 2 / fully desirable" threshold annotation, which is pinned at
+        # y = 0.015 in axes fraction. So low points are labelled above and high points
+        # below, which also keeps every label inside the axes. Neighbours are then
+        # separated horizontally instead, alternating along the x order.
         clusters.sort(key=lambda c: c["x"])
+        axa.margins(0.22)                      # before the transform is queried
         for k, c in enumerate(clusters):
             lines = [f"{n}  MPO {m:.2f}" if not np.isnan(m) else n for n, m in c["members"]]
-            dyk = 11 if k % 2 == 0 else -11 - 7 * (len(lines) - 1)
-            axa.annotate("\n".join(lines), xy=(c["x"], c["y"]), xytext=(9, dyk),
+            y_frac = axa.transAxes.inverted().transform(
+                axa.transData.transform((c["x"], c["y"])))[1]
+            up = y_frac < 0.55
+            dyk = 11 if up else -11 - 7 * (len(lines) - 1)
+            dxk, ha = (9, "left") if k % 2 == 0 else (-9, "right")
+            axa.annotate("\n".join(lines), xy=(c["x"], c["y"]), xytext=(dxk, dyk),
                          textcoords="offset points", fontsize=7.5, color="#2A2A2A",
-                         va="bottom" if dyk > 0 else "top",
+                         ha=ha, va="bottom" if up else "top",
                          arrowprops={"arrowstyle": "-", "lw": 0.6, "color": "#B0B0B0"})
-        axa.margins(0.22)
         if derived and not substituted:
             axa.annotate("logD derived from Crippen clogP and the predicted ionization "
                          "(neutral species only); a lower bound for strong bases",
