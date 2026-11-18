@@ -29,7 +29,6 @@ from pathlib import Path
 import numpy as np
 
 from .parsers import frequencies
-from .theme import ok, step, warn
 
 #: Atomic masses, u. Enough for organic chemistry plus the common heteroatoms; anything
 #: missing falls back to 12.0, which only changes the displacement scale, not its direction.

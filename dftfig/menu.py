@@ -73,7 +73,7 @@ class _Keys:
         self._buf = b""
         self._old = None
 
-    def __enter__(self) -> "_Keys":
+    def __enter__(self) -> _Keys:
         import termios
         import tty
         self._old = termios.tcgetattr(self.fd)

@@ -17,7 +17,7 @@ from . import config as C
 from . import cubes as cubemod
 from . import descriptors as descmod
 from . import geom, orca_io, properties, runner
-from .theme import PALETTE, banner, console, ok, step, warn, bad
+from .theme import banner, console, ok, step, warn, bad
 
 STAGES = ["build", "opt", "sp", "fukui", "cubes", "descriptors", "figures"]
 
@@ -353,7 +353,7 @@ def _print_descriptor_table(cfg, df):
     sub = df[df["medium"] == ref]
     if sub.empty:
         return
-    suffix = "_koopmans" if f"IE_eV_koopmans" in df.columns else "_deltascf"
+    suffix = "_koopmans" if "IE_eV_koopmans" in df.columns else "_deltascf"
     t = Table(title=f"global reactivity descriptors in {ref}  ({suffix[1:]})",
               header_style="brand", box=None, padding=(0, 2), title_style="brand")
     cols = ["molecule", "e_homo_eV", "e_lumo_eV", "gap_eV",

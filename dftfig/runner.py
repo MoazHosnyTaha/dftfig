@@ -3,7 +3,6 @@ from __future__ import annotations
 
 import json
 import os
-import shutil
 import signal
 import subprocess
 import threading
@@ -15,7 +14,7 @@ from rich.progress import (BarColumn, MofNCompleteColumn, Progress, SpinnerColum
                            TextColumn, TimeElapsedColumn)
 
 from . import parsers
-from .theme import PALETTE, bad, console, ok, step, warn
+from .theme import PALETTE, console, warn
 
 #: Live ORCA child processes, so an interrupt can stop them instead of orphaning them.
 _LIVE: dict[int, subprocess.Popen] = {}

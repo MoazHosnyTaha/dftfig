@@ -9,12 +9,10 @@ import numpy as np
 import pandas as pd
 from matplotlib.gridspec import GridSpec
 from rdkit import Chem
-from rdkit.Chem import Draw
 from rdkit.Chem.Draw import rdMolDraw2D
 
 from .. import properties as props
 from ..figstyle import apply_style, caption, panel_letter
-from ..theme import ok, warn
 from .fig2 import _save
 
 HUES = ["#7C4DFF", "#00A5A5", "#FF8A3D", "#C2185B", "#2E7D32", "#5D4037"]
@@ -209,7 +207,7 @@ def build(cfg: dict, mols: dict, prop_df: pd.DataFrame,
                  "Add pKa_acidic / pKa_basic to\n" + str(cfg["figures"]["properties_csv"])
                  + " to get real speciation curves.",
                  ha="center", va="bottom", fontsize=8, color="#C77800",
-                 bbox=dict(boxstyle="round,pad=0.4", fc="#FFF6E5", ec="#C77800", lw=0.7))
+                 bbox={"boxstyle": "round,pad=0.4", "fc": "#FFF6E5", "ec": "#C77800", "lw": 0.7})
     elif dashed_any:
         axb.plot([], [], color="#9E9E9E", ls="--", lw=1.4,
                  label="dashed = nothing ionizes in this range; flat at the formal charge")

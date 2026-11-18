@@ -75,7 +75,7 @@ def _blocks(cfg: dict, stage: str, solvent: str, spec=None) -> list[str]:
     out.append(f"%maxcore {int(ex['maxcore_mb'])}")
 
     if cfg["solvation"]["model"] == "SMD" and solvent != "gas":
-        out.append('%cpcm\n  smd true\n  SMDsolvent "{}"\nend'.format(SOLVENT_NAME[solvent]))
+        out.append(f'%cpcm\n  smd true\n  SMDsolvent "{SOLVENT_NAME[solvent]}"\nend')
 
     if stage == "opt" and cfg["theory"]["run_freq"]:
         out.append(f"%freq  Temp {float(cfg['theory']['temperature'])}  end")

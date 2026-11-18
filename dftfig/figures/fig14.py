@@ -12,7 +12,7 @@ from rdkit import Chem
 from rdkit.Chem.Draw import SimilarityMaps, rdMolDraw2D
 
 from ..figstyle import apply_style, caption, panel_letter
-from ..theme import ok, warn
+from ..theme import warn
 from .fig2 import _save
 
 HUES = ["#7C4DFF", "#00A5A5", "#FF8A3D", "#C2185B", "#2E7D32", "#5D4037"]
@@ -168,7 +168,7 @@ def build(cfg: dict, mols: dict, prop_df: pd.DataFrame) -> list[Path]:
             axa.annotate("\n".join(lines), xy=(c["x"], c["y"]), xytext=(9, dyk),
                          textcoords="offset points", fontsize=7.5, color="#2A2A2A",
                          va="bottom" if dyk > 0 else "top",
-                         arrowprops=dict(arrowstyle="-", lw=0.6, color="#B0B0B0"))
+                         arrowprops={"arrowstyle": "-", "lw": 0.6, "color": "#B0B0B0"})
         axa.margins(0.22)
         if derived and not substituted:
             axa.annotate("logD derived from Crippen clogP and the predicted ionization "

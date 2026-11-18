@@ -11,12 +11,12 @@ from matplotlib.colors import LinearSegmentedColormap
 from matplotlib.gridspec import GridSpec
 
 from .. import cubes, render
-from ..figstyle import (apply_style, band_letter, caption, cell_caption,
+from ..figstyle import (apply_style, band_letter, cell_caption,
                         pad_to_common_aspect,
                         show_image, trim_white)
 from ..orca_io import DIELECTRIC
 from ..render import ESP_PALETTES
-from ..theme import ok, step, warn
+from ..theme import ok, warn
 
 PYMOL_RGB = {
     "red": (1.0, 0.0, 0.0), "orange": (1.0, 0.5, 0.0), "yellow": (1.0, 1.0, 0.0),
@@ -37,7 +37,6 @@ def build(cfg: dict, mols: dict, descriptors: pd.DataFrame | None = None) -> lis
     apply_style(int(cfg["figures"]["dpi"]))
     names = list(mols)
     solvent = cfg["figures"]["reference_solvent"]
-    work = Path(cfg["execution"]["work_dir"])
 
     # --- MEP colour range -------------------------------------------------------------
     # The potential around an ion is dominated by its monopole: a +1 cation is positive
@@ -131,8 +130,8 @@ def build(cfg: dict, mols: dict, descriptors: pd.DataFrame | None = None) -> lis
         elif suspect:
             badge = cell_caption(fig, ax, f"NOT A MINIMUM - {int(nim)} imaginary mode(s)",
                                  size=7.5, color="white",
-                                 bbox=dict(boxstyle="round,pad=0.25", fc="#C62828",
-                                           ec="none"))
+                                 bbox={"boxstyle": "round,pad=0.25", "fc": "#C62828",
+                                           "ec": "none"})
             if badge is not None:
                 badge.set_fontweight("bold")
         elif e.get("is_min") is True and e.get("restarts"):
@@ -163,9 +162,9 @@ def build(cfg: dict, mols: dict, descriptors: pd.DataFrame | None = None) -> lis
                 xy=(0.5, -0.06), xycoords="axes fraction", ha="center", va="top",
                 fontsize=8 if not unbound else 7,
                 color="#8A4B00" if unbound else "black",
-                bbox=dict(boxstyle="round,pad=0.22",
-                          fc="#FFF6E5" if unbound else "#F2EEFF",
-                          ec="#C77800" if unbound else "#7C4DFF", lw=0.7))
+                bbox={"boxstyle": "round,pad=0.22",
+                          "fc": "#FFF6E5" if unbound else "#F2EEFF",
+                          "ec": "#C77800" if unbound else "#7C4DFF", "lw": 0.7})
 
     # Row C - MEP
     for j, n in enumerate(names):
@@ -203,10 +202,12 @@ def build(cfg: dict, mols: dict, descriptors: pd.DataFrame | None = None) -> lis
         f"Optimized geometry, frontier orbitals and electrostatic potential in "
         f"{solvent} ($\\epsilon$ = {eps:g})",
         fontsize=9.5, y=0.985, x=0.055, ha="left")
+    mep_note = ("scaled per panel" if mode == "per_panel"
+                else f"range {vrange[0]:+.3f} to {vrange[1]:+.3f} a.u., shared")
     fig.text(0.055, 0.008,
              f"{level}   |   orbital isosurface $\\pm${cfg['render']['orbital_isovalue']} a.u."
              f"   |   density isosurface {cfg['render']['density_isovalue']} a.u."
-             f"   |   MEP {'scaled per panel' if mode == 'per_panel' else 'range %+.3f to %+.3f a.u., shared' % vrange}",
+             f"   |   MEP {mep_note}",
              fontsize=6.5, ha="left", va="bottom", color="#707070")
 
     return _save(cfg, fig, "figure2")

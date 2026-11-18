@@ -12,9 +12,9 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from rdkit import Chem
-from rdkit.Chem import AllChem, Descriptors, rdMolDescriptors
+from rdkit.Chem import rdMolDescriptors
 
-from .theme import bad, ok, step, warn
+from .theme import warn
 
 
 @dataclass
@@ -258,7 +258,7 @@ def report(specs: dict[str, MoleculeSpec], force: bool = False) -> None:
     unexpected charge - is lost in the repetition.
     """
     from rich.table import Table
-    from .theme import PALETTE, console
+    from .theme import console
 
     key = tuple(sorted((n, s.charge, s.multiplicity) for n, s in specs.items()))
     if not force and key in _REPORTED:

@@ -56,7 +56,6 @@ def global_descriptors(ie: float, ea: float) -> dict:
 def collect(cfg: dict) -> pd.DataFrame:
     """Build the descriptor table over every molecule x medium that completed."""
     work = Path(cfg["execution"]["work_dir"])
-    scheme = cfg["property"]["population"]
     mode = cfg["property"]["koopmans_mode"]
     _restarts = _saddle_restarts(work)
     _flat = _flat_modes(work)
@@ -76,7 +75,7 @@ def collect(cfg: dict) -> pd.DataFrame:
                 "dielectric": DIELECTRIC.get(solvent, float("nan")),
                 "E_sp_Eh": parsers.final_energy(sp),
                 "dipole_D": parsers.dipole(sp),
-                **{k: v for k, v in hl.items()},
+                **hl,
             }
 
             opt = d / f"{name}_{solvent}_opt.out"
@@ -86,7 +85,7 @@ def collect(cfg: dict) -> pd.DataFrame:
                 row["n_imaginary"] = len(imag)
                 row["lowest_freq_cm-1"] = min((f for f in freqs if abs(f) > 1e-6), default=float("nan"))
                 row["is_minimum"] = (len(imag) == 0) if freqs else None
-                row.update({k: v for k, v in parsers.thermochemistry(opt).items()})
+                row.update(parsers.thermochemistry(opt))
 
             # --- Koopmans ----------------------------------------------------------------
             if mode in ("koopmans", "both") and hl:

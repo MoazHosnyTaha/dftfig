@@ -17,7 +17,7 @@ from rdkit import Chem
 from rdkit.Chem import Crippen, rdMolDescriptors
 
 from . import parsers
-from .theme import ok, warn
+from .theme import warn
 
 
 def crippen_atom_contributions(mol: Chem.Mol) -> np.ndarray:
@@ -77,7 +77,6 @@ def prepare_mlp(cfg: dict, name: str, mol: Chem.Mol) -> tuple[Path | None, float
     """
     solvent = cfg["figures"]["reference_solvent"]
     work = Path(cfg["execution"]["work_dir"]) / name / solvent
-    out = work / f"{name}_mlp.out"
     src = work / f"{name}_{solvent}_sp.out"
     if not src.exists():
         src = work / f"{name}_{solvent}_opt.out"

@@ -17,7 +17,7 @@ import numpy as np
 import pandas as pd
 
 from . import pka
-from .theme import note, ok, warn
+from .theme import note, warn
 
 
 # ----------------------------------------------------------------- CNS MPO (Wager 2010)
@@ -111,10 +111,12 @@ def net_charge(ph, acidic: list[float], basic: list[float],
     """
     ph = np.atleast_1d(np.asarray(ph, dtype=float))
     q = np.full_like(ph, float(baseline_charge))
-    for pka in acidic:
-        q -= 1.0 / (1.0 + 10.0 ** (pka - ph))
-    for pka in basic:
-        q += 1.0 / (1.0 + 10.0 ** (ph - pka))
+    # Not `pka`: that name is the pka MODULE at the top of this file, and shadowing it
+    # inside a loop is how a later edit here would reach for pka.predict and get a float.
+    for pka_acid in acidic:
+        q -= 1.0 / (1.0 + 10.0 ** (pka_acid - ph))
+    for pka_base in basic:
+        q += 1.0 / (1.0 + 10.0 ** (ph - pka_base))
     return q
 
 
@@ -187,6 +189,11 @@ def load_properties(cfg: dict, rdkit_props: dict[str, dict] | None = None,
                     df[dst] = np.nan
                 if pd.isna(df.at[i, dst]) if dst in df.columns else True:
                     df.at[i, dst] = rp[src]
+            # The column has to exist before .at writes into it: pandas 4 raises KeyError
+            # instead of creating it, and a user CSV without a `formula` column is the
+            # normal case, not the exception.
+            if "formula" not in df.columns:
+                df["formula"] = ""
             df.at[i, "formula"] = rp["formula"]
             df.at[i, "clogP_rdkit"] = rp["clogP_crippen"]
 

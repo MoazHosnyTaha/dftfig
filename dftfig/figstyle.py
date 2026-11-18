@@ -4,7 +4,6 @@ from __future__ import annotations
 from pathlib import Path
 
 import matplotlib as mpl
-import matplotlib.pyplot as plt
 
 #: Role-mapped font ladder: (base, annotation, tick).
 SIZES = (9, 8, 7)
@@ -140,7 +139,6 @@ def pad_to_common_aspect(paths, pad_frac: float = 0.02):
     across the row. Padding the images to a common aspect first keeps all the boxes
     identical, so the labels line up.
     """
-    import numpy as np
     from PIL import Image
 
     real = [p for p in paths if p is not None and Path(p).exists()]

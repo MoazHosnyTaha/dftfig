@@ -315,8 +315,8 @@ def _init(cfg_path: Path) -> int:
         console.print("  [muted]structures are the only required input: charge, pKa, logD, "
                       "TPSA and the\n  CNS MPO score are all worked out from them.[/muted]\n")
     else:
-        console.print(f"  [muted]next:[/muted] [value]dft run[/value] "
-                      f"[muted]- it walks you through every setting, then runs[/muted]\n")
+        console.print("  [muted]next:[/muted] [value]dft run[/value] "
+                      "[muted]- it walks you through every setting, then runs[/muted]\n")
     return 0
 
 
@@ -324,7 +324,7 @@ def interactive(cfg_path: Path) -> int:
     while True:
         _banner(cfg_path)
         choice = _menu(cfg_path)
-        action = dict((m[0], m[2]) for m in MENU)[choice]
+        action = {m[0]: m[2] for m in MENU}[choice]
 
         if action == "quit":
             console.print("  [muted]bye[/muted]\n")
@@ -562,9 +562,9 @@ def _show_outputs(cfg) -> None:
     if figs.exists():
         for f in sorted(figs.glob("*.png")):
             console.print(f"    [value]{f.name}[/value]")
-    console.print(f"    [value]descriptors.csv[/value] "
-                  f"[muted]- every number behind the figures, with a warnings column"
-                  f"[/muted]\n")
+    console.print("    [value]descriptors.csv[/value] "
+                  "[muted]- every number behind the figures, with a warnings column"
+                  "[/muted]\n")
 
 
 if __name__ == "__main__":

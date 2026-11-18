@@ -5,13 +5,10 @@ can be traced back to - and re-run from - the exact commands that drew it.
 """
 from __future__ import annotations
 
-import os
-import shutil
 import subprocess
-import sys
 from pathlib import Path
 
-from .theme import bad, ok, step, warn
+from .theme import bad, warn
 
 #: ESP colour ramps. Values are fractions of render.esp_range.
 ESP_PALETTES = {

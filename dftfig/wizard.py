@@ -11,9 +11,8 @@ from pathlib import Path
 
 from rich.align import Align
 from rich.markup import escape
-from rich.columns import Columns
 from rich.panel import Panel
-from rich.prompt import Confirm, FloatPrompt, IntPrompt, Prompt
+from rich.prompt import FloatPrompt, IntPrompt, Prompt
 
 from . import menu as M
 from rich.rule import Rule
@@ -110,7 +109,8 @@ FIGURE_GROUPS = ("3D rendering", "Figure assembly")
 
 # A parameter that cannot take effect given the other answers is not asked about.
 def _relevant(key: str, cfg: dict) -> bool:
-    g = lambda k: C.get(cfg, k)
+    def g(k):
+        return C.get(cfg, k)
     rules = {
         "molecules.charge":            lambda: g("molecules.charge_mode") != "auto",
         "molecules.multiplicity":      lambda: g("molecules.multiplicity_mode") != "auto",
@@ -184,7 +184,7 @@ def _param_panel(p: P.Param, current) -> None:
             t.add_row(f"{marker} {escape(str(c.value))}", c.label, c.detail or "",
                       _tagstr(c.tags))
         console.print(t)
-        console.print(f"  [muted]* = current value[/muted]")
+        console.print("  [muted]* = current value[/muted]")
 
 
 def _ask(p: P.Param, current):

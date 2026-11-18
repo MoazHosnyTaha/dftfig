@@ -381,8 +381,12 @@ def advisories(cfg: dict) -> list[str]:
     sp = str(cfg["property"]["basis_sp"])
     diffuse = ("++" in sp or sp.lower().startswith("aug-") or "TZVPD" in sp
                or "QZVPD" in sp)
+    # Every cubes.orbitals setting in the registry plots the LUMO; the names checked here
+    # were "frontier_pm1" and "all_valence", which no longer exist as choices, so the
+    # advisory was silently skipped for homo_lumo_pm1 and homo_lumo_pm2 - the two
+    # settings that plot the MOST unbound virtual orbitals.
     if (diffuse and cfg["cubes"]["enabled"]
-            and cfg["cubes"]["orbitals"] in ("homo_lumo", "frontier_pm1", "all_valence")):
+            and cfg["cubes"]["orbitals"] in ("homo_lumo", "homo_lumo_pm1", "homo_lumo_pm2")):
         out.append(
             f"property.basis_sp = {sp} carries diffuse functions, and the LUMO of a neutral "
             f"organic molecule is usually unbound (positive orbital energy). With a diffuse "

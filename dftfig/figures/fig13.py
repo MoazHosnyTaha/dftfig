@@ -11,10 +11,10 @@ from matplotlib.gridspec import GridSpec
 
 from .. import mlp as mlpmod
 from .. import render
-from ..figstyle import (apply_style, band_letter, caption, cell_caption,
-                        pad_to_common_aspect, panel_letter, show_image, trim_white)
+from ..figstyle import (apply_style, cell_caption,
+                        pad_to_common_aspect, show_image, trim_white)
 from ..render import MLP_PALETTES
-from ..theme import ok, warn
+from ..theme import warn
 from .fig2 import PYMOL_RGB, _save
 
 
