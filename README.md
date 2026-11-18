@@ -1,7 +1,7 @@
 # dftfig — automated DFT and figure pipeline for ORCA
 
-[![tests](https://github.com/moazhassanein/dftfig/actions/workflows/tests.yml/badge.svg)](https://github.com/moazhassanein/dftfig/actions/workflows/tests.yml)
-[![build](https://github.com/moazhassanein/dftfig/actions/workflows/build.yml/badge.svg)](https://github.com/moazhassanein/dftfig/actions/workflows/build.yml)
+[![tests](https://github.com/MoazHosnyTaha/dftfig/actions/workflows/tests.yml/badge.svg)](https://github.com/MoazHosnyTaha/dftfig/actions/workflows/tests.yml)
+[![build](https://github.com/MoazHosnyTaha/dftfig/actions/workflows/build.yml/badge.svg)](https://github.com/MoazHosnyTaha/dftfig/actions/workflows/build.yml)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10%E2%80%933.13-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
 
@@ -66,7 +66,7 @@ welcome.
 ### With conda (recommended — this is how you get PyMOL)
 
 ```bash
-git clone https://github.com/moazhassanein/dftfig && cd dftfig
+git clone https://github.com/MoazHosnyTaha/dftfig && cd dftfig
 conda env create -f environment.yml
 conda activate dftfig
 pip install -e .
@@ -882,3 +882,18 @@ which generates every input file without launching anything.
 
 Markers: `orca` needs an ORCA installation, `pymol` needs PyMOL. Both skip themselves
 when the program is absent, and CI runs `pytest -m "not orca"`.
+
+---
+
+## Contact and citation
+
+Issues and questions: <https://github.com/MoazHosnyTaha/dftfig/issues> — usage questions
+are welcome there, not only bug reports. Please include the output of `dft doctor`.
+
+Maintainer: Moaz H. T. Hassanein, Department of Pharmaceutical Chemistry, Faculty of
+Pharmacy, Sinai University — Kantara Branch, Ismailia, Egypt.
+<moaz.hassanein@su.edu.eg> · <moaz.hassanein1@gmail.com> ·
+[ORCID 0009-0001-1389-9305](https://orcid.org/0009-0001-1389-9305)
+
+If you use dftfig in published work, please cite it — see `CITATION.cff`, which GitHub
+renders as a ready-made citation in the sidebar.

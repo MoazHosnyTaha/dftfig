@@ -52,11 +52,11 @@ test = ["pytest>=7.0", "pytest-cov>=4.0"]
 dev = ["pytest>=7.0", "pytest-cov>=4.0", "ruff>=0.4"]
 
 [project.urls]
-Homepage = "https://github.com/moazhassanein/dftfig"
-Documentation = "https://github.com/moazhassanein/dftfig#readme"
-Repository = "https://github.com/moazhassanein/dftfig"
-Issues = "https://github.com/moazhassanein/dftfig/issues"
-Changelog = "https://github.com/moazhassanein/dftfig/blob/main/CHANGELOG.md"
+Homepage = "https://github.com/MoazHosnyTaha/dftfig"
+Documentation = "https://github.com/MoazHosnyTaha/dftfig#readme"
+Repository = "https://github.com/MoazHosnyTaha/dftfig"
+Issues = "https://github.com/MoazHosnyTaha/dftfig/issues"
+Changelog = "https://github.com/MoazHosnyTaha/dftfig/blob/main/CHANGELOG.md"
 
 [project.scripts]
 dft = "dftfig.cli:main"

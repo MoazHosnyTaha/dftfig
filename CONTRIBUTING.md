@@ -8,7 +8,7 @@ document — please open an issue saying so.
 
 | what | where |
 |---|---|
-| Something does not work | [open an issue](https://github.com/moazhassanein/dftfig/issues) |
+| Something does not work | [open an issue](https://github.com/MoazHosnyTaha/dftfig/issues) |
 | A question about how to use it | open an issue with the `question` label |
 | A figure looks wrong | open an issue and attach the figure plus `runs/descriptors.csv` |
 | A chemistry question about the results | open an issue — these are often the most useful reports |
@@ -23,7 +23,7 @@ failure is usually in the last 40 lines.
 ## Setting up a development environment
 
 ```bash
-git clone https://github.com/moazhassanein/dftfig && cd dftfig
+git clone https://github.com/MoazHosnyTaha/dftfig && cd dftfig
 conda env create -f environment.yml
 conda activate dftfig
 pip install -e ".[dev]"
