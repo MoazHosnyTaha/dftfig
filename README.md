@@ -1,5 +1,10 @@
 # dftfig — automated DFT and figure pipeline for ORCA
 
+[![tests](https://github.com/moazhassanein/dftfig/actions/workflows/tests.yml/badge.svg)](https://github.com/moazhassanein/dftfig/actions/workflows/tests.yml)
+[![build](https://github.com/moazhassanein/dftfig/actions/workflows/build.yml/badge.svg)](https://github.com/moazhassanein/dftfig/actions/workflows/build.yml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%E2%80%933.13-blue.svg)](https://www.python.org/downloads/)
+[![License: MIT](https://img.shields.io/badge/license-MIT-green.svg)](LICENSE)
+
 Give it structures; it gives you back the figures. dftfig drives ORCA through geometry
 optimization, frequencies, a property single point and the N±1 single points, then renders
 the result as publication-ready figures — frontier orbitals, electrostatic potential,
@@ -484,10 +489,15 @@ It gets four things deliberately right that a naive SMARTS list gets wrong:
 3. a tetrazole's three remaining nitrogens are not basic azole nitrogens
 4. a biguanide matches the guanidine pattern twice but has one strongly basic centre
 
+That accuracy claim is a test, not a paragraph: `tests/test_pka.py` carries the reference
+table with its literature sources and asserts the dominant pKa to within 1.5 log units for
+every compound in it. Run `pytest tests/test_pka.py` to reproduce it.
+
 Known weaknesses are listed in `pka.KNOWN_WEAKNESSES`: vinylogous acids (warfarin) are
 reported as ordinary phenols and come out several units too high, strong ring substituent
 effects are not modelled, only the first ionization of a polyprotic acid is taken, and
-tautomers are used as drawn.
+tautomers are used as drawn. Warfarin is in the test file as an `xfail` with that
+explanation attached, so the limitation is visible rather than discovered.
 
 logD(7.4) follows from Crippen clogP and the neutral fraction under the independent-site
 Henderson–Hasselbalch model. Only the neutral microspecies is taken to partition, which is
@@ -753,3 +763,29 @@ Whatever you run, the caption needs: functional, both basis sets, the solvation 
 CPCM or SMD rather than IEF-PCM**, the population scheme, the isovalues for every surface, the MEP
 colour range, and whether IE/EA are Koopmans or ΔSCF. `descriptors.csv` and the stamp on Figure 2
 carry all of it.
+
+---
+
+## 12. Tests
+
+```bash
+pip install -e ".[dev]"
+pytest -m "not orca"
+```
+
+The suite needs neither ORCA nor a network connection. It runs against genuine (trimmed)
+ORCA 6.1 output checked into `tests/fixtures/`, and against `execution.dry_run: true`,
+which generates every input file without launching anything.
+
+| file | what it covers |
+| --- | --- |
+| `test_parsers.py` | every public function in `parsers.py`, against the real aniline outputs; also checks the trimmed fixtures still parse to the values the full files gave |
+| `test_regression_long_output.py` | the `OSError: File name too long` crash of 1.4.0 — a failed job with a long output |
+| `test_config.py` | `repair`, `validate` and `advisories` for the combinations that have actually cost a run |
+| `test_discover.py` | ORCA verification, including the GNOME screen reader at `/usr/bin/orca` |
+| `test_pka.py` | the pKa reference table, with literature values and sources |
+| `test_integration_dryrun.py` | build + opt end to end: keyword line, `%pal`/`%maxcore`, solvation, per-compound charge |
+| `test_figures.py` | Figures 12 and 14 render a real PNG from a checked-in results table |
+
+Markers: `orca` needs an ORCA installation, `pymol` needs PyMOL. Both skip themselves
+when the program is absent, and CI runs `pytest -m "not orca"`.

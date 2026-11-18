@@ -1,0 +1,83 @@
+name: tests
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # The pip matrix is the one that matters for `pip install dftfig`: every runtime
+  # dependency except PyMOL is on PyPI, and the tests that need PyMOL or ORCA carry a
+  # marker and skip themselves. ORCA is proprietary and is never installed in CI, so the
+  # suite always runs with -m "not orca".
+  pytest:
+    name: pytest ${{ matrix.python }} on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        python: ["3.10", "3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python }}
+          cache: pip
+
+      - name: Install dftfig and its test extra
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[test]"
+
+      - name: Show what is installed
+        run: python -c "import dftfig, rdkit; print(dftfig.__version__, rdkit.__version__)"
+
+      - name: Run the test suite
+        env:
+          MPLBACKEND: Agg        # no display on a runner; the figure tests render headless
+        run: pytest -m "not orca" --cov=dftfig --cov-report=term-missing
+
+  # One job with the conda environment the README recommends, because that is the only
+  # way to get PyMOL: it un-skips the @pytest.mark.pymol tests, so the 3D rendering path
+  # is exercised on at least one platform per run.
+  conda:
+    name: conda + PyMOL (ubuntu)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash -el {0}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: conda-incubator/setup-miniconda@v3
+        with:
+          environment-file: environment.yml
+          activate-environment: dftfig
+          miniforge-version: latest
+
+      - name: Install dftfig into the environment
+        run: pip install -e ".[test]"
+
+      - name: Confirm PyMOL is present, so the pymol-marked tests really run
+        run: python -c "from dftfig import discover; p = discover.find_pymol(); print(p); assert p"
+
+      - name: Run the test suite
+        run: pytest -m "not orca"
+
+  lint:
+    name: ruff
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install ruff
+      - run: ruff check .

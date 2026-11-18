@@ -35,9 +35,12 @@ against checked-in ORCA output files, and `execution.dry_run: true` generates ev
 input file without launching anything. Tests that genuinely need ORCA are marked:
 
 ```bash
-pytest -m "not orca"      # the default on a machine without ORCA
+pytest -m "not orca"      # what CI runs; the default on a machine without ORCA
 pytest -m orca            # only the ones that need it
 ```
+
+Tests that render a 3D panel are marked `pymol` and skip themselves when PyMOL is not
+importable, so a pip-only environment still runs everything else.
 
 ## What a good pull request looks like
 
@@ -67,7 +70,8 @@ figures probably need the same thing.
   `dftfig/menu.py` would fix it. It is deliberately not written yet because it cannot
   be tested on the maintainer's machines.
 - **More pKa reference data.** The SMARTS model in `dftfig/pka.py` is validated against
-  26 compounds in `tests/test_pka.py`. Adding well-measured values, especially for
+  17 compounds in `tests/test_pka.py` (15 within 1.5 log units, carbazole correctly
+  non-ionizable, warfarin a documented xfail). Adding well-measured values, especially for
   classes it currently gets wrong, directly improves Figure 12.
 - **Basis sets and elements beyond organics.** ECPs and transition metals are untested.
 - **Other quantum chemistry backends.** The ORCA-specific code is confined to

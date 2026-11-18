@@ -88,4 +88,12 @@ target-version = "py310"
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "B", "UP", "C4"]
-ignore = ["E501"]
+# Each of these is a style rule the codebase disagrees with, not a defect it tolerates:
+#   E501  line length - enforced at 100 by the formatter settings above, and the long
+#         lines that remain are user-facing message strings that read worse when split.
+#   E702  `a = x; b = y` on one line, used only for pairs of trivial assignments that
+#         belong together (grid dimensions, colour pairs).
+#   E741  the loop variable `l` for a line of an output file, throughout the parsers.
+#   B905  zip(..., strict=) - the pairs zipped here are built together a few lines above
+#         and adding strict= to each call says nothing a reader did not already know.
+ignore = ["E501", "E702", "E741", "B905"]

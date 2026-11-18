@@ -7,6 +7,22 @@ and this project uses [semantic versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- A pytest suite: 207 tests over the parsers, the config layer, executable discovery,
+  the pKa model, input generation under `execution.dry_run` and figure rendering. It
+  needs neither ORCA nor a network connection; tests that drive ORCA or PyMOL carry the
+  `orca` / `pymol` markers and skip themselves when the program is absent.
+- Test fixtures of genuine ORCA 6.1 output (aniline in water, opt+freq / property /
+  cation / anion), trimmed to 19-82% of their original size by
+  `tools/trim_orca_output.py`. `tests/fixtures/full_file_values.json` records what every
+  parser returned for the untrimmed files, and a test compares the trimmed fixtures
+  against it, so the trimming is verified rather than trusted.
+- The accuracy claim for the SMARTS pKa model is now a parametrised test over 17
+  reference compounds with their literature sources, not a sentence in the README.
+  Warfarin is an `xfail`: its vinylogous acid is read as a phenol and comes out 5.0 log
+  units high.
+- GitHub Actions: the suite on Ubuntu and macOS across Python 3.10-3.13, a conda job
+  that installs PyMOL so the rendering tests actually run, a ruff lint job, and a build
+  job that checks the wheel with twine and runs the installed `dft` command.
 - `dft doctor`: reports ORCA, PyMOL, physical and logical core counts, memory and
   Python packages, so a new user can diagnose their own machine before asking for help.
 - Automatic discovery of ORCA and PyMOL (`dftfig/discover.py`). Checks `$ORCA_PATH`,
@@ -30,6 +46,14 @@ and this project uses [semantic versioning](https://semver.org/).
   `taskkill /T` on Windows.
 - The arrow-key menu is used only where termios exists; elsewhere every question falls
   back automatically to a numbered prompt.
+
+### Fixed
+- The advisory about plotting a LUMO with a diffuse basis checked `cubes.orbitals`
+  against `frontier_pm1` and `all_valence`, which are not values the registry offers, so
+  it was never issued for `homo_lumo_pm1` or `homo_lumo_pm2` - the two settings that plot
+  the most weakly bound virtual orbitals.
+- `properties.load_properties` wrote the `formula` column with `.at` before the column
+  existed, which pandas 4 turns from a silent insertion into a KeyError.
 
 ### Removed
 - `run_all.sh`, superseded by `dft run`.
