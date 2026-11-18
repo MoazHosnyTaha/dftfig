@@ -31,7 +31,7 @@ and this project uses [semantic versioning](https://semver.org/).
 - `parsers.program_version()` and `parsers.input_keyword_line()`: the ORCA version and the
   literal `!` keyword line, both read out of an existing output file.
 - `tests/test_provenance.py` with a real ORCA 6.1.0 output as a fixture
-  (`tests/data/ANIL_water_sp.out`): hash stability under core-count changes, hash
+  (`tests/fixtures/ANIL_water_sp.out`): hash stability under core-count changes, hash
   sensitivity to functional and basis, the manifest round-trip through `dft verify`, and
   the version parser.
 - `dft doctor`: reports ORCA, PyMOL, physical and logical core counts, memory and

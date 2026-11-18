@@ -1,6 +1,6 @@
 """Provenance: the config hash, the run manifest, and reading ORCA's own version.
 
-None of these tests start ORCA. The fixture in tests/data is a real ORCA 6.1.0 output
+None of these tests start ORCA. The fixture in tests/fixtures is a real ORCA 6.1.0 output
 (a B3LYP-D3BJ/def2-TZVP CPCM(Water) single point on aniline) precisely so the parsers
 are exercised against what ORCA actually prints rather than a hand-written sample.
 """
@@ -16,7 +16,7 @@ from dftfig import __version__
 from dftfig import params as P
 from dftfig import parsers, provenance
 
-FIXTURE = Path(__file__).parent / "data" / "ANIL_water_sp.out"
+FIXTURE = Path(__file__).parent / "fixtures" / "ANIL_water_sp.out"
 
 
 @pytest.fixture
