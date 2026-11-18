@@ -1,0 +1,26 @@
+# runs and project output
+runs/
+scratch/
+config.yaml
+molecules/
+data/
+*.cube
+*.gbw
+*.tmp
+
+# python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# editors / OS
+.vscode/
+.idea/
+.DS_Store

@@ -1,0 +1,42 @@
+name: Bug report
+description: Something does not work, or produces a result you believe is wrong
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting. A result that is silently **wrong** is more serious than
+        a crash — please do report those too, even if you are not certain.
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect instead?
+    validations:
+      required: true
+  - type: textarea
+    id: doctor
+    attributes:
+      label: Output of `dft doctor`
+      description: This reports your ORCA and PyMOL paths, core counts and packages.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: config
+    attributes:
+      label: Your config.yaml
+      render: yaml
+  - type: textarea
+    id: orca
+    attributes:
+      label: ORCA output, if a calculation failed
+      description: >-
+        The last 40 lines of runs/<molecule>/<medium>/*.out usually contain the failure.
+      render: shell
+  - type: input
+    id: version
+    attributes:
+      label: dftfig version
+      description: "`dft --version`"
+    validations:
+      required: true

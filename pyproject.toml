@@ -1,0 +1,91 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "dftfig"
+dynamic = ["version"]
+description = "Automated ORCA DFT pipeline producing publication-ready figures from structures alone"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
+requires-python = ">=3.10"
+authors = [
+    { name = "Moaz H. T. Hassanein", email = "moaz.hassanein@su.edu.eg" },
+]
+keywords = [
+    "computational chemistry", "DFT", "ORCA", "quantum chemistry",
+    "molecular electrostatic potential", "frontier orbitals",
+    "scientific visualization", "reproducible research",
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Scientific/Engineering :: Visualization",
+    "Operating System :: POSIX :: Linux",
+    "Operating System :: MacOS :: MacOS X",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Environment :: Console",
+]
+# RDKit is imported by 9 modules and is not optional. PyMOL is NOT listed: the
+# open-source build is distributed through conda-forge, not PyPI, and the pipeline
+# degrades to skipping 3D panels without it rather than failing. ORCA is a separate
+# program the user installs themselves; see THIRD_PARTY.md.
+dependencies = [
+    "numpy>=1.23",
+    "scipy>=1.9",
+    "pandas>=1.5",
+    "matplotlib>=3.6",
+    "pyyaml>=6.0",
+    "pillow>=9.0",
+    "rich>=13.0",
+    "rdkit>=2022.09",
+]
+
+[project.optional-dependencies]
+test = ["pytest>=7.0", "pytest-cov>=4.0"]
+dev = ["pytest>=7.0", "pytest-cov>=4.0", "ruff>=0.4"]
+
+[project.urls]
+Homepage = "https://github.com/moazhassanein/dftfig"
+Documentation = "https://github.com/moazhassanein/dftfig#readme"
+Repository = "https://github.com/moazhassanein/dftfig"
+Issues = "https://github.com/moazhassanein/dftfig/issues"
+Changelog = "https://github.com/moazhassanein/dftfig/blob/main/CHANGELOG.md"
+
+[project.scripts]
+dft = "dftfig.cli:main"
+dftfig = "dftfig.cli:main"
+
+# One source of truth for the version: dftfig/__init__.py. Declaring it in both this
+# file and the package is how they drifted to 1.1.0 and 1.4.0 simultaneously.
+[tool.setuptools.dynamic]
+version = { attr = "dftfig.__version__" }
+
+[tool.setuptools]
+packages = ["dftfig", "dftfig.figures", "dftfig.templates"]
+
+[tool.setuptools.package-data]
+dftfig = ["templates/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q --strict-markers"
+markers = [
+    "orca: requires a working ORCA installation (deselect with '-m \"not orca\"')",
+    "pymol: requires a working PyMOL installation",
+    "slow: takes more than a few seconds",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "B", "UP", "C4"]
+ignore = ["E501"]

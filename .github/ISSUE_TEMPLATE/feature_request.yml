@@ -1,0 +1,22 @@
+name: Feature request
+description: Suggest a figure, a parameter, or a capability
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: need
+    attributes:
+      label: What are you trying to do that you cannot do now?
+      description: Describe the chemistry or the paper figure, not the implementation.
+    validations:
+      required: true
+  - type: textarea
+    id: current
+    attributes:
+      label: How do you do it at the moment?
+  - type: textarea
+    id: refs
+    attributes:
+      label: References
+      description: >-
+        A paper showing the figure or method, if there is one. For a new descriptor or
+        scoring function, the original definition.

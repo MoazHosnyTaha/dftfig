@@ -1,0 +1,92 @@
+
+
+╭──────────────────────────────────────────────────────────────────────────────────────────────────────────────╮
+│                                                                                                              │
+│                   dftfig  |  automated DFT + figure pipeline for ORCA                                        │
+│                   optimized geometries -> frontier orbitals -> MEP -> lipophilicity -> MPO                   │
+│                                                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+╭────────────────────────────────────────────── starting points ───────────────────────────────────────────────╮
+│   preset         what it is                                    use when                                      │
+│   paper          B3LYP/6-31+G(d,p), CPCM, no dispersion,       reproducing the chlocarbazomycin manuscript   │
+│                  6-311++G(d,p) property step, 5 media,         as published                                  │
+│                  Koopmans descriptors                                                                        │
+│   recommended    wB97X-D4/def2-TZVP, SMD water, delta-SCF      new work you intend to publish                │
+│                  and Koopmans side by side, fixed MEP                                                        │
+│                  scale, transparent backgrounds                                                              │
+│   fast           r2SCAN-3c, no frequencies, 40^3 cubes, no     checking the plumbing works before            │
+│                  ray tracing                                   committing compute                            │
+│   defaults       the registry defaults (paper-like, with       a sensible middle ground to start             │
+│                  RIJCOSX for speed)                            customizing from                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+
+─────────────────────────────────── Level of theory (geometry optimization) ────────────────────────────────────
+  The functional, basis set and convergence settings for the OPT+FREQ step.
+
+╭─ Exchange-correlation functional (theory.functional) ────────────────────────────────────────────────────────╮
+│  The DFT approximation. Controls accuracy of geometries, orbital energies and every descriptor derived from  │
+│  them.                                                                                                       │
+│                                                                                                              │
+│  How to choose: B3LYP reproduces the manuscript. Be aware that bare B3LYP has NO London dispersion, which    │
+│  matters because the paper's structural argument is about pi-stacking - see theory.dispersion below. If you  │
+│  are starting fresh rather than reproducing, wB97X-D4 or r2SCAN-3c are better value for the same money.      │
+│                                                                                                              │
+│  Cost: Hybrids (B3LYP, PBE0, M06-2X) need exact exchange and are ~3-5x a pure GGA. Range-separated hybrids   │
+│  (wB97X) add another ~30%.                                                                                   │
+│                                                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+  value           name          what it means                                                      preset       
+  * B3LYP         B3LYP         The functional used in the manuscript. Reliable ground-state       paper        
+                                geometries for organics; underestimates barriers; no dispersion                 
+                                of its own.                                                                     
+    B3LYP D3BJ    B3LYP-D3BJ    B3LYP plus Grimme's D3 dispersion with Becke-Johnson damping.                   
+                                Essentially free, and strictly better than bare B3LYP for                       
+                                anything involving stacking or intramolecular contacts.                         
+    PBE0 D3BJ     PBE0-D3BJ     Parameter-free hybrid, 25% exact exchange. Often better orbital                 
+                                energies and gaps than B3LYP.                                                   
+    wB97X-D4      wB97X-D4      Range-separated hybrid with D4 dispersion. The most reliable       recommended  
+                                general-purpose choice today for geometries, gaps and                           
+                                non-covalent interaction energies.                                              
+    M062X         M06-2X        Heavily parameterized meta-hybrid, good for main-group                          
+                                thermochemistry and non-covalent complexes. Needs a dense                       
+                                integration grid (DefGrid3).                                                    
+    r2SCAN-3c     r2SCAN-3c     Composite method: meta-GGA with its own fitted triple-zeta         fast         
+                                basis and dispersion baked in. Very fast and surprisingly                       
+                                accurate - ignores the basis_opt setting.                                       
+  * = current value
+
+╭─ Solvation model (solvation.model) ──────────────────────────────────────────────────────────────────────────╮
+│  The implicit-solvent model. The solute sits in a cavity inside a polarizable continuum with the dielectric  │
+│  constant of the chosen solvent.                                                                             │
+│                                                                                                              │
+│  How to choose: IMPORTANT: ORCA does not implement Gaussian's IEF-PCM. CPCM (conductor-like PCM) is the      │
+│  closest equivalent and the two agree to well under 0.1 kcal/mol in high-dielectric solvents such as water   │
+│  (eps 78) and DMSO (eps 47). They diverge more in low-dielectric media - chloroform (eps 4.7) is where you   │
+│  would see the difference. SMD adds a non-electrostatic cavitation/dispersion/repulsion term and is the      │
+│  better model for solvation free energies, though it changes orbital energies slightly relative to the       │
+│  published CPCM/IEF-PCM numbers.                                                                             │
+│                                                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+  value     name              what it means                                                        preset       
+  * CPCM    CPCM              Conductor-like PCM. ORCA's closest analogue to the manuscript's      paper fast   
+                              IEF-PCM; electrostatics only.                                                     
+    SMD     SMD               Truhlar's solvation model: CPCM electrostatics plus an empirical     recommended  
+                              non-electrostatic term. Best choice for solvation free energies                   
+                              and for logP-type reasoning.                                                      
+    none    Gas phase only    No continuum. Use when you want bare vertical ionization energies                 
+                              and electron affinities, which is the only context where                          
+                              Koopmans-type descriptors are physically interpretable.                           
+  * = current value
+
+╭─ MEP colour-scale limits (render.esp_range, a.u.) ───────────────────────────────────────────────────────────╮
+│  The electrostatic potential is coloured from -value (red, electron-rich) to +value (blue, electron-poor).   │
+│  0.05 a.u. is about 31 kcal/mol.                                                                             │
+│                                                                                                              │
+│  How to choose: This is the single most abused setting in published MEP figures. If each panel is            │
+│  auto-scaled to its own min/max - which is what most GUIs do by default - then panels CANNOT be compared,    │
+│  because the same colour means a different potential in each one. Fixing one range across all molecules is   │
+│  what makes Figure 2C a real comparison. 0.05 a.u. suits neutral organics with hydroxyl and methoxy groups;  │
+│  widen it if your series includes charged species.                                                           │
+│                                                                                                              │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+

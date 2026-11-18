@@ -1,0 +1,29 @@
+cff-version: 1.2.0
+message: "If you use dftfig in work you publish, please cite it."
+title: "dftfig: an automated ORCA DFT and figure pipeline for molecular structures"
+abstract: >-
+  dftfig drives ORCA through geometry optimization, frequencies, a property
+  single point and the N+-1 single points starting from structure files alone,
+  then renders publication-ready figures of frontier orbitals, electrostatic
+  potential, lipophilicity surfaces and physicochemical space. Every parameter
+  is explained at the point of choice, and every number written to the figures
+  is traceable to the calculation that produced it.
+type: software
+authors:
+  - given-names: "Moaz H. T."
+    family-names: "Hassanein"
+    orcid: "https://orcid.org/0009-0001-1389-9305"
+    email: "moaz.hassanein@su.edu.eg"
+    affiliation: >-
+      Department of Pharmaceutical Chemistry, Faculty of Pharmacy,
+      Sinai University - Kantara Branch, Ismailia, Egypt
+license: MIT
+repository-code: "https://github.com/moazhassanein/dftfig"
+keywords:
+  - computational chemistry
+  - density functional theory
+  - ORCA
+  - molecular electrostatic potential
+  - frontier molecular orbitals
+  - scientific visualization
+  - reproducible research

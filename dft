@@ -1,0 +1,67 @@
+#!/usr/bin/env bash
+# dft - fallback launcher for a dftfig checkout that has NOT been pip-installed.
+#
+# The supported way to get this command is:
+#
+#     pip install dftfig            # installs a `dft` console script
+#
+# This script exists for the other case: running straight from a source checkout,
+# or from an environment whose site-packages you cannot write to. It works out
+# where it lives and which interpreter to use, so it can be copied or symlinked
+# anywhere without editing.
+#
+# Override either guess with an environment variable:
+#     DFTFIG_HOME=/path/to/checkout   DFTFIG_PYTHON=/path/to/python   dft ...
+set -euo pipefail
+
+# Resolve this script through any symlinks, so a link on PATH still finds the
+# checkout it points into.
+SELF="${BASH_SOURCE[0]}"
+while [ -L "$SELF" ]; do
+  DIR="$(cd -P "$(dirname "$SELF")" && pwd)"
+  SELF="$(readlink "$SELF")"
+  [[ "$SELF" != /* ]] && SELF="$DIR/$SELF"
+done
+HERE="$(cd -P "$(dirname "$SELF")" && pwd)"
+
+DFTFIG_HOME="${DFTFIG_HOME:-$HERE}"
+if [ ! -d "$DFTFIG_HOME/dftfig" ]; then
+  echo "dft: no 'dftfig' package under $DFTFIG_HOME" >&2
+  echo "     set DFTFIG_HOME to the directory that contains it." >&2
+  exit 1
+fi
+
+# Find an interpreter that can actually import the dependencies. An interpreter
+# that cannot import rdkit will fail later with a confusing traceback, so the
+# check is done here, once, with a message that says what to do about it.
+pick_python() {
+  if [ -n "${DFTFIG_PYTHON:-}" ]; then echo "$DFTFIG_PYTHON"; return; fi
+  local c
+  for c in "$HERE/.venv/bin/python" "$HOME/envs/dftfig/bin/python" \
+           "$CONDA_PREFIX/bin/python" "$(command -v python3 || true)" \
+           "$(command -v python || true)"; do
+    [ -n "$c" ] && [ -x "$c" ] || continue
+    if PYTHONPATH="$DFTFIG_HOME" "$c" -c 'import rdkit, rich, yaml' >/dev/null 2>&1; then
+      echo "$c"; return
+    fi
+  done
+  return 1
+}
+
+if ! PY="$(pick_python)"; then
+  cat >&2 <<'MSG'
+dft: no Python found that can import the dependencies (rdkit, rich, pyyaml).
+
+     Install them, for example:
+       conda env create -f environment.yml   # includes PyMOL
+       conda activate dftfig
+
+     or point this launcher at an interpreter that already has them:
+       DFTFIG_PYTHON=/path/to/python dft ...
+MSG
+  exit 1
+fi
+
+export PYTHONPATH="$DFTFIG_HOME${PYTHONPATH:+:$PYTHONPATH}"
+export PYTHONDONTWRITEBYTECODE=1
+exec "$PY" -m dftfig.cli "$@"

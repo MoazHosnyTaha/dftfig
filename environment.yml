@@ -1,0 +1,15 @@
+name: dftfig
+channels:
+  - conda-forge
+dependencies:
+  - python=3.11
+  - rdkit
+  - numpy
+  - scipy
+  - pandas
+  - matplotlib
+  - pymol-open-source
+  - pyyaml
+  - pillow
+  - rich
+  - cclib
