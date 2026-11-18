@@ -1,0 +1,48 @@
+                                 *****************
+                                 * O   R   C   A *
+                                 *****************
+
+                   #, Program Version 6.1.0  -   RELEASE   -
+
+INPUT FILE
+================================================================================
+NAME = ANIL_water_opt.inp
+|  1> ! B3LYP D3BJ def2-SVP RIJCOSX def2/J Opt FREQ TightSCF DefGrid2 CPCM(Water)
+|  2> %pal nprocs 6 end
+|  3> %maxcore 2500
+|  4> * xyzfile 0 1 ANIL_start.xyz
+|  5>
+|  6>                          ****END OF INPUT****
+================================================================================
+
+                         *****************************
+                         * Geometry Optimization Run *
+                         *****************************
+
+                         ----------------------------
+                                SCF ITERATIONS
+                         ----------------------------
+ITER       Energy         Delta-E        Max-DP      RMS-DP      [F,P]     Damp
+               ***  Starting incremental Fock matrix formation  ***
+  0   -287.0381446947   0.000000000000 0.09123947  0.00281142  0.4120312 0.7000
+  1   -287.1552891040  -0.117144409285 0.08114492  0.00245301  0.2731095 0.7000
+                 ***Turning on DIIS***
+ 24   -287.2401103324  -0.000013552018 0.00912233  0.00021104  0.0051287 0.0000
+...
+125   -287.2401104881  -0.000000000013 0.00904117  0.00020998  0.0050912 0.0000
+
+               *****************************************************
+               *                     ERROR                         *
+               *        SCF NOT CONVERGED AFTER 125 CYCLES         *
+               *****************************************************
+
+
+Error (ORCA_SCF): SERIOUS PROBLEM IN SOSCF - PLEASE CHECK YOUR INPUT AND/OR
+                  INCREASE MaxIter IN THE %scf BLOCK
+
+
+ORCA finished by error termination in SCF
+Calling Command: mpirun -np 6 orca_scf_mpi ANIL_water_opt.scfgbw b b
+[file orca_tools/qcmsg.cpp, line 465]:
+  .... aborting the run
+

@@ -1,0 +1,68 @@
+                                 *****************
+                                 * O   R   C   A *
+                                 *****************
+
+                   #, Program Version 6.1.0  -   RELEASE   -
+
+INPUT FILE
+================================================================================
+NAME = TSLIKE_water_opt.inp
+|  1> ! B3LYP D3BJ def2-SVP RIJCOSX def2/J Opt FREQ TightSCF DefGrid2 CPCM(Water)
+|  2> %pal nprocs 6 end
+|  3> * xyzfile 0 1 TSLIKE_start.xyz
+|  4>
+|  5>                          ****END OF INPUT****
+================================================================================
+
+                 *******************************************************
+                 *** FINAL ENERGY EVALUATION AT THE STATIONARY POINT ***
+                 ***               (AFTER   14 CYCLES)               ***
+                 *******************************************************
+
+---------------------------------
+CARTESIAN COORDINATES (ANGSTROEM)
+---------------------------------
+  O      0.000000    0.000000    0.117790
+  H      0.000000    0.755450   -0.471160
+  H      0.000000   -0.755450   -0.471160
+
+FINAL SINGLE POINT ENERGY      -76.419737011217
+
+-----------------------
+VIBRATIONAL FREQUENCIES
+-----------------------
+
+Scaling factor for frequencies =  1.000000000  (already applied!)
+
+     0:        0.00 cm**-1
+     1:        0.00 cm**-1
+     2:        0.00 cm**-1
+     3:        0.00 cm**-1
+     4:        0.00 cm**-1
+     5:        0.00 cm**-1
+     6:     -312.45 cm**-1
+     7:       -4.21 cm**-1
+     8:      150.33 cm**-1
+     9:      411.07 cm**-1
+    10:      988.41 cm**-1
+    11:     3051.72 cm**-1
+
+
+------------
+NORMAL MODES
+------------
+
+                 ----------------------------
+                 THERMOCHEMISTRY AT 298.15K
+                 ----------------------------
+
+Temperature         ...   298.15 K
+Pressure            ...     1.00 atm
+
+Zero point energy                ...      0.02051640 Eh      12.87 kcal/mol
+Total entropy correction         ...     -0.02140933 Eh    -13.43 kcal/mol
+Total enthalpy                   ...    -76.39685102 Eh
+Final Gibbs free energy         ...    -76.41826035 Eh
+
+                             ****ORCA TERMINATED NORMALLY****
+TOTAL RUN TIME: 0 days 0 hours 3 minutes 11 seconds 884 msec

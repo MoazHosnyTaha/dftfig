@@ -1,0 +1,40 @@
+                                 *****************
+                                 * O   R   C   A *
+                                 *****************
+
+                   #, Program Version 6.1.0  -   RELEASE   -
+
+INPUT FILE
+================================================================================
+NAME = ANIL_water_opt.inp
+|  1> ! B3LYP D3BJ def2-SVP RIJCOSX def2/J Opt FREQ TightSCF DefGrid2 CPCM(Water)
+|  2> %pal nprocs 6 end
+|  3> * xyzfile 0 1 ANIL_start.xyz
+|  4>
+|  5>                          ****END OF INPUT****
+================================================================================
+
+         *************************************************************
+         *                GEOMETRY OPTIMIZATION CYCLE 100            *
+         *************************************************************
+
+                  ---------------------------------
+                  CARTESIAN COORDINATES (ANGSTROEM)
+                  ---------------------------------
+  N      2.271019   -0.350253    0.303614
+  C      0.914426   -0.140284    0.121269
+
+FINAL SINGLE POINT ENERGY      -287.249118404931
+
+                    ....................................................
+                    .         THE OPTIMIZATION HAS NOT CONVERGED        .
+                    ....................................................
+
+The optimization did not converge but reached the maximum number of
+optimization cycles.
+
+ORCA finished by error termination in GSTEP
+Calling Command: mpirun -np 6 orca_gstep_mpi ANIL_water_opt.optgbw b
+[file orca_tools/qcmsg.cpp, line 465]:
+  .... aborting the run
+
