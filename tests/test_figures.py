@@ -19,6 +19,7 @@ import pytest
 
 matplotlib.use("Agg")
 
+from dftfig import figureapi                                          # noqa: E402
 from dftfig import mlp as mlpmod                                      # noqa: E402
 from dftfig import molecules as M                                     # noqa: E402
 from dftfig import properties                                         # noqa: E402
@@ -46,6 +47,13 @@ def figure_project(make_cfg, fixtures, tmp_path):
 
 
 @pytest.fixture
+def figure_ctx(figure_project, descriptors):
+    """The contract object a figure is handed, built the way the pipeline builds it."""
+    cfg, specs, _, prop_df = figure_project
+    return figureapi.build_context(cfg, specs, descriptors, prop_df)
+
+
+@pytest.fixture
 def descriptors(fixtures) -> pd.DataFrame:
     return pd.read_csv(fixtures / "descriptors.csv")
 
@@ -64,20 +72,16 @@ def _assert_real_png(paths):
         assert len(im.convert("RGB").getcolors(maxcolors=1 << 20)) > 50
 
 
-def test_fig12_renders_from_the_structures_and_the_property_table(figure_project):
+def test_fig12_renders_from_the_structures_and_the_property_table(figure_ctx):
     from dftfig.figures import fig12
 
-    cfg, specs, mols, prop_df = figure_project
-    paths = fig12.build(cfg, mols, prop_df,
-                        charges={n: s.charge for n, s in specs.items()})
-    _assert_real_png(paths)
+    _assert_real_png(fig12.build(figure_ctx))
 
 
-def test_fig14_renders_from_the_structures_and_the_property_table(figure_project):
+def test_fig14_renders_from_the_structures_and_the_property_table(figure_ctx):
     from dftfig.figures import fig14
 
-    cfg, _, mols, prop_df = figure_project
-    _assert_real_png(fig14.build(cfg, mols, prop_df))
+    _assert_real_png(fig14.build(figure_ctx))
 
 
 def test_fig12_shows_the_predicted_pka_of_each_compound(figure_project):
@@ -102,12 +106,10 @@ def test_the_figures_stage_writes_png_and_the_resolved_property_table(figure_pro
         assert Path(p).stat().st_size > MIN_PNG_BYTES
 
 
-def test_an_unknown_format_is_not_silently_produced(figure_project):
-    cfg, _, mols, prop_df = figure_project
+def test_an_unknown_format_is_not_silently_produced(figure_ctx):
     from dftfig.figures import fig14
 
-    paths = fig14.build(cfg, mols, prop_df)
-    assert all(Path(p).suffix == ".png" for p in paths)
+    assert all(Path(p).suffix == ".png" for p in fig14.build(figure_ctx))
 
 
 # -------------------------------------------------------------------- PyMOL-dependent
