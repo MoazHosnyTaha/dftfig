@@ -154,6 +154,28 @@ def _step_map(titles: list[str], here: int) -> None:
                         border_style=PALETTE["muted"], expand=False))
 
 
+def _choices(p: P.Param) -> list:
+    """The choices to display for one parameter, including anything discovered.
+
+    The registry entry for `figures.which` is static, but the figure set is not: a plugin
+    dropped in ./dft_figures or installed from a package has to appear here, or a user has
+    no way to learn its name except by reading their own source.
+    """
+    if p.key != "figures.which":
+        return p.choices
+    try:
+        from . import figureapi
+        found = figureapi.available()
+    except Exception:
+        return p.choices
+    known = {c.value for c in p.choices}
+    extra = [P.Choice(name, spec.title,
+                      f"plugin, from {spec.origin}"
+                      + (f"; needs {', '.join(spec.requires)}" if spec.requires else ""))
+             for name, spec in sorted(found.items()) if name not in known]
+    return list(p.choices) + extra
+
+
 def _param_panel(p: P.Param, current) -> None:
     body = Text()
     body.append(p.help.strip() + "\n", style=PALETTE["info"])
@@ -172,13 +194,14 @@ def _param_panel(p: P.Param, current) -> None:
     console.print(Panel(body, title=title, title_align="left",
                         border_style=PALETTE["muted"], padding=(0, 2)))
 
-    if p.choices:
+    choices = _choices(p)
+    if choices:
         t = Table(show_header=True, header_style="brand", box=None, padding=(0, 2))
         t.add_column("value", style=PALETTE["value"], no_wrap=True)
         t.add_column("name")
         t.add_column("what it means")
         t.add_column("note")
-        for c in p.choices:
+        for c in choices:
             marker = "*" if (c.value == current or
                              (isinstance(current, list) and c.value in current)) else " "
             t.add_row(f"{marker} {escape(str(c.value))}", c.label, c.detail or "",
@@ -193,13 +216,13 @@ def _ask(p: P.Param, current):
         return M.confirm(p.label, default=bool(current))
     if p.kind == "choice":
         opts = [M.Option(c.value, f"{c.value}   -   {c.label}", c.detail, _marks(c.tags))
-                for c in p.choices]
-        default = next((i for i, c in enumerate(p.choices) if c.value == current), 0)
+                for c in _choices(p)]
+        default = next((i for i, c in enumerate(_choices(p)) if c.value == current), 0)
         picked = M.select(p.label, opts, default=default, allow_quit=False)
         return current if picked is None else picked
     if p.kind == "multichoice":
         opts = [M.Option(c.value, f"{c.value}   -   {c.label}", c.detail, _marks(c.tags))
-                for c in p.choices]
+                for c in _choices(p)]
         while True:
             picked = M.select_many(p.label, opts, subtitle="space toggles, enter accepts",
                                    preselected=list(current))

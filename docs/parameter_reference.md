@@ -712,7 +712,7 @@ Comma-separated 1-based atom indices to label in the geometry panel, e.g. '3,4,9
 ### `figures.which`
 **Figures to produce** · type `multichoice` · default `['fig2', 'fig12', 'fig13', 'fig14']`
 
-Selects which of the manuscript-style figures are assembled.
+Selects which figures are assembled. The four below are built in; any plugin discovered in figures.plugin_dir or registered by an installed package can be named here too.
 
 **How to choose.** fig2 needs the full DFT chain. fig12, fig13 and fig14 need only the optimized geometries plus the properties CSV, so they are quick to iterate on once the DFT has run once.
 
@@ -722,6 +722,13 @@ Selects which of the manuscript-style figures are assembled.
 | `fig12` | Figure 12 - pKa and net charge vs pH | Acid-base analysis: annotated 2D structures plus a speciation curve. Needs pKa values in the properties CSV. | `paper` `recommended` |
 | `fig13` | Figure 13 - lipophilicity surfaces | Molecular lipophilicity potential painted on the molecular surface, with TPSA. Requires optimized geometries and rendering. | `paper` `recommended` |
 | `fig14` | Figure 14 - CNS MPO and metabolism maps | logD/TPSA bubble plot with MPO scoring, plus site-of-metabolism sensitivity maps. Needs the properties and SOM CSVs. | `paper` `recommended` |
+
+### `figures.plugin_dir`  *(advanced)*
+**Where your own figures live** · type `path` · default `dft_figures`
+
+Directory scanned for plain .py figure modules, relative to the project directory. Anything found there appears in figures.which alongside the built-ins.
+
+**How to choose.** This is the no-packaging route: drop a file defining NAME, REQUIRES and build(ctx) into ./dft_figures and it is discovered on the next run. A figure you want to share instead goes in a pip-installable package that registers the 'dftfig.figures' entry-point group - both routes land in the same registry. See docs/writing-a-figure.md.
 
 ### `figures.reference_solvent`
 **Solvent shown in the figures** · type `choice` · default `water`
@@ -888,11 +895,11 @@ Directory holding <molecule>.csv files mapping atom index to metabolism probabil
 *Where ORCA lives, how much hardware to use, and restart behaviour.*
 
 ### `execution.orca_path`
-**ORCA executable** · type `path` · default `/home/moazhosnytaha/orca_6_1_0/orca`
+**ORCA executable** · type `path` · default ``
 
-Full path to the ORCA binary. The helper tools orca_plot and orca_vpot are located next to it automatically.
+Full path to the ORCA binary. Leave empty to search this machine automatically. The helper tools orca_plot and orca_vpot are located next to it.
 
-**How to choose.** Must be the absolute path, not just 'orca' - ORCA requires this for its own parallel startup. Verified present at the default on this machine.
+**How to choose.** Empty means auto-discovery, which is almost always what you want: dftfig checks $ORCA_PATH, then your PATH, then the usual install locations (~/orca*, /opt/orca*, /usr/local/orca*, /share/apps/orca*), and remembers what it finds in ~/.config/dftfig/paths.yaml so it only has to look once. A candidate is accepted only if orca_plot and orca_vpot sit beside it - on most Linux desktops /usr/bin/orca is the GNOME Orca SCREEN READER, and running that instead produces a failure that makes no sense. Set this explicitly if you have several ORCA versions and want a particular one. It must be the absolute path, never bare 'orca': ORCA needs it for its own parallel startup. Run `dft doctor` to see what was found.
 
 ### `execution.nprocs`
 **Parallel processes** — cores · type `int` · default `4` · range `1–`

@@ -157,6 +157,19 @@ def repair(cfg: dict) -> list[str]:
     return changed
 
 
+def discovered_figures(cfg: dict | None = None) -> list[str]:
+    """Every figure name this installation can draw. Empty if discovery itself fails.
+
+    Config validation must not be the thing that breaks because somebody's plugin has a
+    syntax error - figureapi already warns about each one it could not load.
+    """
+    try:
+        from . import figureapi
+        return sorted(figureapi.available(cfg))
+    except Exception:
+        return []
+
+
 def validate(cfg: dict) -> None:
     """Check values against the registry and catch combinations that cannot work."""
     errs: list[str] = []
@@ -173,6 +186,11 @@ def validate(cfg: dict) -> None:
                 errs.append(f"{key}: {v!r} is not one of {allowed}")
         elif p.kind == "multichoice":
             allowed = [c.value for c in p.choices]
+            if key == "figures.which":
+                # The figure set is open: a plugin name is as legal as a built-in, and
+                # validating against the registry rather than the static choice list is
+                # what makes a user's own figure usable without editing dftfig.
+                allowed = sorted(set(allowed) | set(discovered_figures(cfg)))
             if not isinstance(v, list):
                 errs.append(f"{key}: expected a list, got {type(v).__name__}")
             elif allowed:

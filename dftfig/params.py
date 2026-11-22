@@ -1031,7 +1031,9 @@ G_FIGURES = Group(
     [
         Param(
             "figures.which", "Figures to produce", "multichoice", ["fig2", "fig12", "fig13", "fig14"],
-            help="Selects which of the manuscript-style figures are assembled.",
+            help="Selects which figures are assembled. The four below are built in; any "
+                 "plugin discovered in figures.plugin_dir or registered by an installed "
+                 "package can be named here too.",
             guidance="fig2 needs the full DFT chain. fig12, fig13 and fig14 need only the optimized "
                      "geometries plus the properties CSV, so they are quick to iterate on once the DFT "
                      "has run once.",
@@ -1049,6 +1051,18 @@ G_FIGURES = Group(
                        "logD/TPSA bubble plot with MPO scoring, plus site-of-metabolism sensitivity maps. "
                        "Needs the properties and SOM CSVs.", (TAG_PAPER, TAG_RECOMMENDED)),
             ],
+        ),
+        Param(
+            "figures.plugin_dir", "Where your own figures live", "path", "dft_figures",
+            help="Directory scanned for plain .py figure modules, relative to the project "
+                 "directory. Anything found there appears in figures.which alongside the "
+                 "built-ins.",
+            guidance="This is the no-packaging route: drop a file defining NAME, REQUIRES "
+                     "and build(ctx) into ./dft_figures and it is discovered on the next "
+                     "run. A figure you want to share instead goes in a pip-installable "
+                     "package that registers the 'dftfig.figures' entry-point group - both "
+                     "routes land in the same registry. See docs/writing-a-figure.md.",
+            advanced=True,
         ),
         Param(
             "figures.reference_solvent", "Solvent shown in the figures", "choice", "water",

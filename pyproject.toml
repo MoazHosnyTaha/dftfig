@@ -62,6 +62,16 @@ Changelog = "https://github.com/MoazHosnyTaha/dftfig/blob/main/CHANGELOG.md"
 dft = "dftfig.cli:main"
 dftfig = "dftfig.cli:main"
 
+# The four built-in figures are registered exactly the way a third party registers
+# theirs. Declaring the same group in another package's pyproject.toml is all it takes
+# for `dft params figures.which` to list it - no edit to dftfig, no import hook.
+# See docs/writing-a-figure.md.
+[project.entry-points."dftfig.figures"]
+fig2 = "dftfig.figures.fig2"
+fig12 = "dftfig.figures.fig12"
+fig13 = "dftfig.figures.fig13"
+fig14 = "dftfig.figures.fig14"
+
 # One source of truth for the version: dftfig/__init__.py. Declaring it in both this
 # file and the package is how they drifted to 1.1.0 and 1.4.0 simultaneously.
 [tool.setuptools.dynamic]
