@@ -164,9 +164,9 @@ def repair(cfg: dict) -> list[str]:
 
     if "frontier_orbitals" in cfg["figures"]["which"]:
         if not cfg["cubes"]["enabled"]:
-            set_("cubes", "enabled", True, "Figure 2 panels B and C are built from cube files")
+            set_("cubes", "enabled", True, "the frontier_orbitals panels B and C are built from cube files")
         if cfg["render"]["engine"] == "none":
-            set_("render", "engine", "pymol", "Figure 2 needs a rendering engine")
+            set_("render", "engine", "pymol", "the frontier_orbitals figure needs a rendering engine")
 
     return changed
 

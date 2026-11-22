@@ -162,7 +162,7 @@ def _labels(cfg: dict, obj: str = "mol") -> list[str]:
 
 
 def render_geometry(cfg: dict, name: str, solvent: str, mcs_indices=None) -> Path | None:
-    """Ball-and-stick render of the DFT-optimized geometry (Figure 2, row A)."""
+    """Ball-and-stick render of the DFT-optimized geometry (the frontier_orbitals figure, row A)."""
     work = Path(cfg["execution"]["work_dir"]) / name / solvent
     xyz = work / f"{name}_{solvent}_sp.xyz"
     if not xyz.exists():
@@ -183,7 +183,7 @@ def render_geometry(cfg: dict, name: str, solvent: str, mcs_indices=None) -> Pat
 
 def render_orbital(cfg: dict, name: str, solvent: str, which: str,
                    mcs_indices=None) -> Path | None:
-    """Two-phase isosurface of one molecular orbital (Figure 2, row B)."""
+    """Two-phase isosurface of one molecular orbital (the frontier_orbitals figure, row B)."""
     work = Path(cfg["execution"]["work_dir"]) / name / solvent
     cube = work / f"{which}.cube"
     xyz = work / f"{name}_{solvent}_sp.xyz"
@@ -217,7 +217,7 @@ def render_orbital(cfg: dict, name: str, solvent: str, which: str,
 def render_mep(cfg: dict, name: str, solvent: str,
                vrange: float | tuple[float, float] | None = None,
                mcs_indices=None) -> Path | None:
-    """Electrostatic potential painted on the electron-density isosurface (Figure 2, row C)."""
+    """Electrostatic potential painted on the electron-density isosurface (the frontier_orbitals figure, row C)."""
     work = Path(cfg["execution"]["work_dir"]) / name / solvent
     dens, esp = work / "eldens.cube", work / "esp.cube"
     xyz = work / f"{name}_{solvent}_sp.xyz"

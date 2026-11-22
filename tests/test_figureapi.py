@@ -324,3 +324,30 @@ def test_the_example_plugin_draws_nothing_when_no_fukui_table_exists(project, pl
     shutil.copy2(EXAMPLES / "fukui_bars" / "fukui_bars.py", plugin_dir / "fukui_bars.py")
     spec = figureapi.available(cfg)["fukui_bars"]
     assert spec.build(figureapi.build_context(cfg, specs, desc, prop_df)) == []
+
+
+def _ctx(cfg):
+    """A FigureContext carrying nothing but config - enough for the pure accessors."""
+    import pandas as pd
+
+    from dftfig.figureapi import FigureContext
+    return FigureContext(cfg, {}, pd.DataFrame(), pd.DataFrame(),
+                         Path(cfg["execution"]["work_dir"]) / "figures", {})
+
+
+def test_label_falls_back_to_the_molecule_name(tmp_path):
+    """A molecule with no entry in figures.labels is shown under its own name."""
+    from dftfig import params
+    cfg = params.defaults()
+    assert _ctx(cfg).label("ANIL") == "ANIL"
+
+
+def test_label_uses_the_configured_display_name():
+    """The label is a figure-only alias; run directories keep the original name."""
+    from dftfig import params
+    cfg = params.defaults()
+    cfg["figures"]["labels"] = {"Conformer3D_COMPOUND_CID_176870": "Erlotinib"}
+    ctx = _ctx(cfg)
+    assert ctx.label("Conformer3D_COMPOUND_CID_176870") == "Erlotinib"
+    assert ctx.label("Conformer3D_COMPOUND_CID_216239") == \
+        "Conformer3D_COMPOUND_CID_216239"

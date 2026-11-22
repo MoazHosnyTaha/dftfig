@@ -138,7 +138,8 @@ def build(ctx: FigureContext) -> list:
             sub = f"formal charge {q:+d}"
         else:
             sub = ""
-        ax.set_title(n + (f"\n{sub}" if sub else ""), fontsize=9, linespacing=1.35)
+        ax.set_title(ctx.label(n) + (f"\n{sub}" if sub else ""), fontsize=9,
+                     linespacing=1.35)
         if txt:
             colour = "#4A4A4A" if src == "csv" else "#2F6FA8"
             line = "   ".join(txt) + ("   (predicted)" if src == "predicted" else "")
@@ -172,8 +173,8 @@ def build(ctx: FigureContext) -> list:
         qcurve = props.net_charge(ph, acidic, basic, base_q)
         style = "-" if (acidic or basic or base_q) else "--"
         dashed_any = dashed_any or style == "--"
-        axb.plot(ph, qcurve, color=HUES[i % len(HUES)], label=n, lw=1.6, ls=style)
-        ends.append([float(qcurve[-1]), n, HUES[i % len(HUES)]])
+        axb.plot(ph, qcurve, color=HUES[i % len(HUES)], label=ctx.label(n), lw=1.6, ls=style)
+        ends.append([float(qcurve[-1]), ctx.label(n), HUES[i % len(HUES)]])
         qmin, qmax = min(qmin, float(qcurve.min())), max(qmax, float(qcurve.max()))
 
     axb.axvline(ph_phys, color="#B0B0B0", lw=0.9, ls="--", zorder=0)

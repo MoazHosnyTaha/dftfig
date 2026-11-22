@@ -31,6 +31,32 @@ class Choice:
     tags: tuple = ()
 
 
+#: Shared by theory.functional and property.functional_sp.
+FUNCTIONALS = [
+                Choice("B3LYP", "B3LYP",
+                       "The functional used in the manuscript. Reliable ground-state geometries for "
+                       "organics; underestimates barriers; no dispersion of its own.", (TAG_PAPER,)),
+                Choice("B3LYP D3BJ", "B3LYP-D3BJ",
+                       "B3LYP plus Grimme's D3 dispersion with Becke-Johnson damping. Essentially free, "
+                       "and strictly better than bare B3LYP for anything involving stacking or "
+                       "intramolecular contacts.", ()),
+                Choice("PBE0 D3BJ", "PBE0-D3BJ",
+                       "Parameter-free hybrid, 25% exact exchange. Often better orbital energies and gaps "
+                       "than B3LYP."),
+                Choice("wB97X-D4", "wB97X-D4",
+                       "Range-separated hybrid with D4 dispersion. The most reliable general-purpose "
+                       "choice today for geometries, gaps and non-covalent interaction energies.",
+                       (TAG_RECOMMENDED,)),
+                Choice("M062X", "M06-2X",
+                       "Heavily parameterized meta-hybrid, good for main-group thermochemistry and "
+                       "non-covalent complexes. Needs a dense integration grid (DefGrid3)."),
+                Choice("r2SCAN-3c", "r2SCAN-3c",
+                       "Composite method: meta-GGA with its own fitted triple-zeta basis and dispersion "
+                       "baked in. Very fast and surprisingly accurate - ignores the basis_opt setting.",
+                       (TAG_FAST,)),
+]
+
+
 @dataclass
 class Param:
     key: str                       # dotted path into the config dict, e.g. "theory.functional"
@@ -300,29 +326,7 @@ G_THEORY = Group(
                      "wB97X-D4 or r2SCAN-3c are better value for the same money.",
             cost="Hybrids (B3LYP, PBE0, M06-2X) need exact exchange and are ~3-5x a pure GGA. "
                  "Range-separated hybrids (wB97X) add another ~30%.",
-            choices=[
-                Choice("B3LYP", "B3LYP",
-                       "The functional used in the manuscript. Reliable ground-state geometries for "
-                       "organics; underestimates barriers; no dispersion of its own.", (TAG_PAPER,)),
-                Choice("B3LYP D3BJ", "B3LYP-D3BJ",
-                       "B3LYP plus Grimme's D3 dispersion with Becke-Johnson damping. Essentially free, "
-                       "and strictly better than bare B3LYP for anything involving stacking or "
-                       "intramolecular contacts.", ()),
-                Choice("PBE0 D3BJ", "PBE0-D3BJ",
-                       "Parameter-free hybrid, 25% exact exchange. Often better orbital energies and gaps "
-                       "than B3LYP."),
-                Choice("wB97X-D4", "wB97X-D4",
-                       "Range-separated hybrid with D4 dispersion. The most reliable general-purpose "
-                       "choice today for geometries, gaps and non-covalent interaction energies.",
-                       (TAG_RECOMMENDED,)),
-                Choice("M062X", "M06-2X",
-                       "Heavily parameterized meta-hybrid, good for main-group thermochemistry and "
-                       "non-covalent complexes. Needs a dense integration grid (DefGrid3)."),
-                Choice("r2SCAN-3c", "r2SCAN-3c",
-                       "Composite method: meta-GGA with its own fitted triple-zeta basis and dispersion "
-                       "baked in. Very fast and surprisingly accurate - ignores the basis_opt setting.",
-                       (TAG_FAST,)),
-            ],
+            choices=FUNCTIONALS,
         ),
         Param(
             "theory.basis_opt", "Basis set (optimization)", "choice", "6-31+G(d,p)",
@@ -548,7 +552,7 @@ G_SOLVATION = Group(
                      "solvent named in figures.reference_solvent.",
             cost="Linear: 4 solvents = 4x the DFT wall time.",
             choices=[
-                Choice("water", "Water (eps 78.4)", "The manuscript's reference medium for Figure 2.",
+                Choice("water", "Water (eps 78.4)", "The manuscript's reference medium for the frontier_orbitals figure.",
                        (TAG_PAPER, TAG_RECOMMENDED, TAG_FAST)),
                 Choice("methanol", "Methanol (eps 32.6)", "Polar protic.", (TAG_PAPER,)),
                 Choice("chloroform", "Chloroform (eps 4.7)", "Low dielectric; where CPCM and IEF-PCM differ most.", (TAG_PAPER,)),
@@ -576,6 +580,22 @@ G_PROPERTY = Group(
                      "in between. Making it explicit is what lets you label every figure with the level "
                      "of theory that actually produced it.",
             cost="One SCF, no gradient - typically 5-15% of the optimization cost.",
+        ),
+        Param(
+            "property.functional_sp", "Functional (property step)", "choice", "",
+            help="The functional for the property single point, independent of the one "
+                 "used for the geometry optimization.",
+            guidance="Empty means reuse the optimization functional, which is the usual "
+                     "choice. Set it when you want a cheap functional to find the "
+                     "geometry and a better one to report orbital energies from - "
+                     "r2SCAN-3c to optimize and wB97X-D4 for the single point is a "
+                     "common pairing. A composite (anything '-3c') carries its own basis "
+                     "and dispersion, so property.basis_sp is ignored for it.",
+            cost="A single point is far cheaper than an optimization, so a more expensive "
+                 "functional here costs little.",
+            choices=[Choice("", "Same as the optimization",
+                            "Reuse theory.functional for the property step.",
+                            (TAG_RECOMMENDED,))] + FUNCTIONALS,
         ),
         Param(
             "property.basis_sp", "Basis set (property step)", "choice", "def2-TZVP",
@@ -711,13 +731,13 @@ G_FUKUI = Group(
 # --------------------------------------------------------------------------------- cubes
 G_CUBES = Group(
     "cubes", "Volumetric data (cube files)",
-    "The 3D grids behind the orbital and MEP panels of Figure 2.",
+    "The 3D grids behind the orbital and MEP panels of the frontier_orbitals figure.",
     [
         Param(
             "cubes.enabled", "Generate cube files", "bool", True,
             help="Writes Gaussian-format .cube files for the frontier orbitals, the electron density and "
                  "the electrostatic potential.",
-            guidance="Needed for Figure 2 panels B and C and for Figure 13. The cubes are also directly "
+            guidance="Needed for the frontier_orbitals panels B and C and for the lipophilicity figure. The cubes are also directly "
                      "loadable in Avogadro and GaussView if you want to look around interactively.",
             cost="Cube generation is cheap; the MEP evaluation is the slow part (see cubes.esp).",
         ),
@@ -734,11 +754,11 @@ G_CUBES = Group(
         Param(
             "cubes.orbitals", "Which orbitals to plot", "choice", "homo_lumo",
             help="Selects the molecular orbitals written as cubes.",
-            guidance="homo_lumo covers Figure 2B. Extend to homo_lumo_pm1 when a frontier orbital is "
+            guidance="homo_lumo covers frontier_orbitals panel B. Extend to homo_lumo_pm1 when a frontier orbital is "
                      "nearly degenerate with the one below/above it and a single-orbital picture would "
                      "mislead - check the orbital energies in descriptors.csv first.",
             choices=[
-                Choice("homo_lumo", "HOMO and LUMO", "The two frontier orbitals. What Figure 2B shows.",
+                Choice("homo_lumo", "HOMO and LUMO", "The two frontier orbitals. What frontier_orbitals panel B shows.",
                        (TAG_PAPER, TAG_RECOMMENDED, TAG_FAST)),
                 Choice("homo_lumo_pm1", "HOMO-1 ... LUMO+1", "Four orbitals - use when frontier orbitals are near-degenerate."),
                 Choice("homo_lumo_pm2", "HOMO-2 ... LUMO+2", "Six orbitals. Rarely needed for a figure."),
@@ -748,7 +768,7 @@ G_CUBES = Group(
             "cubes.esp", "Compute electrostatic potential", "bool", True,
             help="Evaluates V(r) at every grid point with orca_vpot and writes a matching ESP cube, which "
                  "is then painted onto the density isosurface to make the MEP map.",
-            guidance="Required for Figure 2C. Note this is a genuine quantum-mechanical MEP from the SCF "
+            guidance="Required for frontier_orbitals panel C. Note this is a genuine quantum-mechanical MEP from the SCF "
                      "density, not a point-charge approximation.",
             cost="Scales as (basis functions)^2 x (grid points). Roughly 5-10 min for a 30-atom molecule "
                  "on an 80^3 grid at triple-zeta; use cubes.esp_nprocs to parallelize.",
@@ -854,7 +874,7 @@ G_RENDER = Group(
             guidance="This is the single most abused setting in published MEP figures. If each panel is "
                      "auto-scaled to its own min/max - which is what most GUIs do by default - then "
                      "panels CANNOT be compared, because the same colour means a different potential in "
-                     "each one. Fixing one range across all molecules is what makes Figure 2C a real "
+                     "each one. Fixing one range across all molecules is what makes frontier_orbitals panel C a real "
                      "comparison. 0.05 a.u. suits neutral organics with hydroxyl and methoxy groups; "
                      "widen it if your series includes charged species.",
             minimum=0.001,
@@ -983,7 +1003,7 @@ G_RENDER = Group(
                      "while each feature is still clearly attributable to its atom; 1.00 begins to "
                      "wash out small localized features. Lower it toward 0.05 if you want to see "
                      "exactly which atom owns which patch. Affects only per-atom colouring "
-                     "(Figure 13), not the ramp-coloured MEP surface, which is already continuous.",
+                     "(the lipophilicity figure), not the ramp-coloured MEP surface, which is already continuous.",
             minimum=0.0, maximum=1.0,
         ),
         Param(
@@ -1072,12 +1092,23 @@ G_FIGURES = Group(
             advanced=True,
         ),
         Param(
+            "figures.labels", "Display names for the figures", "kvlist", {},
+            help="Map a molecule name to the label the figures should show.",
+            guidance="Molecule names come from the SDF file names and become directory "
+                     "names, so they are often long and machine-generated - a PubChem "
+                     "conformer download gives you Conformer3D_COMPOUND_CID_176870. Set "
+                     "Conformer3D_COMPOUND_CID_176870: Erlotinib here and the figures say "
+                     "Erlotinib while the run directories and ORCA files keep their "
+                     "original names, so nothing is recomputed. Leave a molecule out and "
+                     "its own name is used.",
+        ),
+        Param(
             "figures.reference_solvent", "Solvent shown in the figures", "choice", "water",
             help="Which solvent's results are used for the figure panels when several were calculated.",
-            guidance="The manuscript shows water in Figure 2 and relegates the other solvents to the "
+            guidance="The manuscript shows water in the frontier_orbitals figure and relegates the other solvents to the "
                      "supplement. Must be one of the solvents you actually calculated.",
             choices=[
-                Choice("water", "Water", "The manuscript's choice for Figure 2.", (TAG_PAPER, TAG_RECOMMENDED, TAG_FAST)),
+                Choice("water", "Water", "The manuscript's choice for the frontier_orbitals figure.", (TAG_PAPER, TAG_RECOMMENDED, TAG_FAST)),
                 Choice("gas", "Gas phase", "The only medium in which Koopmans descriptors are physically interpretable."),
                 Choice("methanol", "Methanol", ""),
                 Choice("chloroform", "Chloroform", ""),
@@ -1117,20 +1148,20 @@ G_FIGURES = Group(
             ],
         ),
         Param(
-            "figures.ph_range", "pH range for Figure 12B", "str", "0,14",
+            "figures.ph_range", "pH range for the speciation curve", "str", "0,14",
             help="Minimum and maximum pH of the speciation curve, comma separated.",
             guidance="0-14 shows the full picture. Narrow to 4,10 if you only care about the "
                      "physiologically relevant window and want the transitions to fill the axes.",
         ),
         Param(
             "figures.physiological_ph", "Physiological pH marker", "float", 7.4,
-            help="The pH at which the predominant species is annotated in Figure 12B.",
+            help="The pH at which the predominant species is annotated in the speciation figureB.",
             guidance="7.4 is blood plasma. Use 6.5 for the small-intestine lumen or 1.5 for gastric fluid "
                      "if you are arguing about oral absorption.",
         ),
         Param(
             "figures.mlp_palette", "Lipophilicity palette", "choice", "paper",
-            help="Colour ramp for the molecular lipophilicity potential surface in Figure 13.",
+            help="Colour ramp for the molecular lipophilicity potential surface in the lipophilicity figure.",
             guidance="'paper' matches the manuscript's caption exactly - red for the least lipophilic "
                      "fragments through to blue for the most lipophilic. Note this is the OPPOSITE of the "
                      "convention most medicinal chemists expect (blue usually means polar), so whichever "
@@ -1145,7 +1176,7 @@ G_FIGURES = Group(
         ),
         Param(
             "figures.mlp_transparency", "Lipophilicity surface transparency", "float", 0.35,
-            help="Transparency of the Figure 13 surfaces: 0 = opaque, 1 = invisible.",
+            help="Transparency of the lipophilicity figure surfaces: 0 = opaque, 1 = invisible.",
             guidance="A fully opaque surface hides the molecule, so the reader cannot tell which "
                      "atom a coloured patch belongs to - the same objection that applies to an "
                      "unlabelled MEP map. 0.3-0.4 lets the skeleton read through while keeping the "
@@ -1198,7 +1229,7 @@ G_FIGURES = Group(
         ),
         Param(
             "figures.pka_source", "Where pKa comes from", "choice", "predict",
-            help="How the acidic and basic pKa values behind Figure 12 and logD are obtained.",
+            help="How the acidic and basic pKa values behind the speciation figure and logD are obtained.",
             guidance="'predict' needs nothing from you: a curated SMARTS table assigns a class "
                      "average pKa to every ionizable group it recognises - carboxylic acid, "
                      "phenol, aliphatic amine, pyridine, imidazole, tetrazole and about thirty "
@@ -1219,7 +1250,7 @@ G_FIGURES = Group(
         ),
         Param(
             "figures.logd_source", "Where logD(7.4) comes from", "choice", "derive",
-            help="How the buffer lipophilicity on Figure 14 is obtained.",
+            help="How the buffer lipophilicity on the mpo_metabolism figure is obtained.",
             guidance="'derive' computes logD from Crippen logP and the ionization model: only "
                      "the neutral microspecies is taken to partition, which is the standard "
                      "approximation. It is a lower bound for strong bases, where ion pairing "
@@ -1233,12 +1264,12 @@ G_FIGURES = Group(
                        (TAG_RECOMMENDED, TAG_FAST)),
                 Choice("csv", "Only what the properties CSV gives",
                        "For measured logD or an external ADMET prediction.", (TAG_PAPER,)),
-                Choice("none", "No logD", "Figure 14 panel A falls back to clogP."),
+                Choice("none", "No logD", "the mpo_metabolism figure panel A falls back to clogP."),
             ],
         ),
         Param(
             "figures.som_source", "Site-of-metabolism source", "choice", "fukui_radical",
-            help="Where the per-atom metabolic-lability weights for Figure 14 B-E come from.",
+            help="Where the per-atom metabolic-lability weights for the mpo_metabolism figure B-E come from.",
             guidance="'fukui_radical' uses the condensed radical Fukui index f0 that this pipeline "
                      "already computes - susceptibility to radical attack is a recognized "
                      "quantum-chemical proxy for the hydrogen abstraction and aromatic oxidation "
@@ -1262,7 +1293,7 @@ G_FIGURES = Group(
         Param(
             "figures.som_dir", "Site-of-metabolism directory", "path", "data/som",
             help="Directory holding <molecule>.csv files mapping atom index to metabolism probability, "
-                 "used for Figure 14 panels B-E.",
+                 "used for the mpo_metabolism figure panels B-E.",
             guidance="Export these from XenoSite or ADMETlab's SOM module. Format: two columns, "
                      "atom_index (1-based, matching the SMILES atom order) and probability (0-1). If a "
                      "file is missing, that panel is drawn greyed out with a note rather than silently "

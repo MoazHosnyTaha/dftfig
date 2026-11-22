@@ -137,7 +137,7 @@ def build(ctx: FigureContext) -> list:
         size = 90.0 if pd.isna(papp) else 60.0 + 900.0 * float(papp) / 1e-4
         xs.append(float(logd)); ys.append(float(tpsa)); ss.append(size)
         mpo = float(ctx.property(n, "cns_mpo", np.nan))
-        cs.append(mpo); labels.append(n); mpos.append(mpo)
+        cs.append(mpo); labels.append(ctx.label(n)); mpos.append(mpo)
 
     if xs:
         sc = axa.scatter(xs, ys, s=ss, c=cs, cmap="viridis", vmin=0, vmax=6,
@@ -233,7 +233,7 @@ def build(ctx: FigureContext) -> list:
         if w is None and source in ("fukui_radical", "both"):
             w, err = _fukui_radical(ctx, n, mol)
             used = "radical Fukui index $f^{0}$"
-        ax.set_title(f"{letters[j]}  {n}", fontsize=9)
+        ax.set_title(f"{letters[j]}  {ctx.label(n)}", fontsize=9)
         if w is None:
             ax.text(0.5, 0.5, f"no metabolism weights\n\n{err}",
                     transform=ax.transAxes, ha="center", va="center",

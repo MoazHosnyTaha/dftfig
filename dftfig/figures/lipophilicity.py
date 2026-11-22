@@ -31,7 +31,7 @@ def build(ctx: FigureContext) -> list:
             ranges[n] = r
 
     if not ranges:
-        warn("no lipophilicity surfaces could be prepared - skipping Figure 13")
+        warn("no lipophilicity surfaces could be prepared - skipping the lipophilicity figure")
         return []
 
     # One shared scale across every panel, so colours mean the same thing throughout.
@@ -62,7 +62,7 @@ def build(ctx: FigureContext) -> list:
         # neighbours shrink to their image aspect - and anything anchored to the axes then
         # sits at a different height from the rest of the row.
         show_image(ax, images.get(n))
-        cell_caption(fig, ax, f"{letters[j]}  {n}", size=9, color="#2A2A2A", dy=0.965,
+        cell_caption(fig, ax, f"{letters[j]}  {ctx.label(n)}", size=9, color="#2A2A2A", dy=0.965,
                      va="bottom")
         cell_caption(fig, ax, "    ".join(sub), size=7.5)
 

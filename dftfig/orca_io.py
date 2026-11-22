@@ -28,18 +28,48 @@ POPULATION_KEY = {
 }
 
 
+#: Stages that describe the property single point rather than the optimization.
+PROPERTY_STAGES = ("sp", "cat", "ani")
+
+
+def stage_functional(cfg: dict, stage: str) -> str:
+    """The functional one stage runs at.
+
+    The property single point may use a different functional from the optimization:
+    the geometry and the orbital energies are separate questions, and it is common to
+    optimize cheaply and report the single point from something better. An empty
+    property.functional_sp means "reuse the optimization functional".
+    """
+    if stage in PROPERTY_STAGES:
+        own = str(cfg.get("property", {}).get("functional_sp") or "")
+        if own:
+            return own
+    return str(cfg["theory"]["functional"])
+
+
+def carries_dispersion(functional: str) -> bool:
+    """Does this functional already include a dispersion correction?
+
+    A composite ('-3c') has one baked in, and the D3BJ/D4 variants name theirs. Adding
+    theory.dispersion on top of any of these double-counts it.
+    """
+    f = str(functional)
+    return "3c" in f or "D3BJ" in f or "D4" in f
+
+
 def keyword_line(cfg: dict, stage: str, solvent: str, multiplicity: int = 1) -> str:
     """Assemble the ORCA '!' keyword line for one stage."""
     t = cfg["theory"]
-    parts = [str(t["functional"])]
+    func = stage_functional(cfg, stage)
+    parts = [func]
 
-    if t["dispersion"] != "none":
+    if t["dispersion"] != "none" and not carries_dispersion(func):
         parts.append(str(t["dispersion"]))
 
-    # r2SCAN-3c is a composite method that carries its own basis set.
-    composite = "3c" in str(t["functional"])
-    if not composite:
-        parts.append(str(cfg["property"]["basis_sp"] if stage in ("sp", "cat", "ani")
+    # A composite method such as r2SCAN-3c carries its own basis set; naming a second
+    # one is an error. Decided per stage, because the two stages may differ in kind.
+    if "3c" not in func:
+        parts.append(str(cfg["property"]["basis_sp"] if stage in PROPERTY_STAGES
                          else t["basis_opt"]))
 
     if t["ri_approx"] == "RIJCOSX":

@@ -179,14 +179,26 @@ class FigureContext:
         return DIELECTRIC.get(medium or self.reference_solvent, float("nan"))
 
     def level_of_theory(self) -> str:
-        """The method line a figure prints as its footnote."""
+        """The method line a figure prints as its footnote.
+
+        The two halves are built independently: the property single point can run at a
+        different functional from the optimization, and a composite method carries its
+        own basis, so printing one next to it would misstate the calculation.
+        """
+        from .orca_io import carries_dispersion, stage_functional
         t = self.config["theory"]
-        disp = "" if t["dispersion"] == "none" else f"-{t['dispersion']}"
-        opt = f"{t['functional']}{disp}/{t['basis_opt']}"
+        disp = t["dispersion"]
+
+        def level(func: str, basis: str) -> str:
+            d = "" if disp == "none" or carries_dispersion(func) else f"-{disp}"
+            return f"{func}{d}" if "3c" in func else f"{func}{d}/{basis}"
+
+        opt = level(str(t["functional"]), str(t["basis_opt"]))
         solv = self.config["solvation"]["model"]
         if self.config["property"]["enabled"]:
-            return (f"{opt} opt // {t['functional']}{disp}/"
-                    f"{self.config['property']['basis_sp']} property, {solv}")
+            sp = level(stage_functional(self.config, "sp"),
+                       str(self.config["property"]["basis_sp"]))
+            return f"{opt} opt // {sp} property, {solv}"
         return f"{opt}, {solv}"
 
     def param(self, key: str, default: Any = None) -> Any:
@@ -349,6 +361,18 @@ class FigureContext:
         return self._mlp_cache[name]
 
     # ------------------------------------------------------------------------- drawing
+    def label(self, name: str) -> str:
+        """The display name for a molecule: what a figure should print above its panel.
+
+        Molecule names double as directory names and ORCA file stems, so they are
+        whatever the input file was called - a PubChem conformer download arrives as
+        Conformer3D_COMPOUND_CID_176870. Renaming the input to fix a figure would
+        orphan every finished calculation, so the label is kept separate and only the
+        figures use it. Unmapped molecules are shown under their own name.
+        """
+        labels = self.config.get("figures", {}).get("labels") or {}
+        return str(labels.get(name, name))
+
     def apply_style(self) -> None:
         """Install dftfig's matplotlib style at the configured resolution."""
         from .figstyle import apply_style

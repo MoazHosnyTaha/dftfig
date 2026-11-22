@@ -6,6 +6,32 @@ and this project uses [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- `figures.labels` maps a molecule name to the name the figures should print. Molecule
+  names double as directory names and ORCA file stems, so a PubChem download arrives as
+  Conformer3D_COMPOUND_CID_176870 and every panel says so. Renaming the input would
+  orphan the finished calculations; a label does not, and re-running only the figures
+  stage costs seconds.
+- `property.functional_sp` runs the property single point at a different functional from
+  the geometry optimization - optimize with r2SCAN-3c, report orbital energies from
+  wB97X-D4. Empty means reuse the optimization functional, so existing runs are
+  unaffected. The ion single points follow the same functional, since the Koopmans
+  descriptors compare them with the neutral.
+
+### Fixed
+- Each stage now decides for itself whether it needs a basis set and a dispersion
+  correction. A composite method carries both, so pairing a composite with a
+  non-composite across the two stages previously named a basis for the composite or
+  added dispersion twice.
+- `resume` no longer reuses a finished job whose level of theory has changed. It
+  compared only "did this terminate normally", so editing the functional and re-running
+  kept the old numbers while the figure footnote claimed the new method.
+- The figure footnote reports the two halves separately and omits the basis for a
+  composite, instead of printing the optimization functional for both.
+- Parameter help and module docstrings referred to the figures by the manuscript's old
+  numbers ("Figure 2", "Figure 13") after the 0.6.0 rename. Nine files updated; the one
+  remaining reference is the genuine citation of Figure 1 of the source paper.
+
 ### Fixed
 - The figures stage could hang forever on the first figure. dftfig never pinned a
   matplotlib backend, so on a machine with PyQt installed - which chemistry

@@ -1,4 +1,4 @@
-Site-of-metabolism weights for Figure 14, panels B-E
+Site-of-metabolism weights for the mpo_metabolism figure, panels B-E
 ====================================================
 
 Only needed when figures.som_source is 'csv' or 'both'. With the default

@@ -109,7 +109,7 @@ def build(ctx: FigureContext) -> list:
         e = en.get(n, {})
         nim = e.get("n_imag")
         suspect = bool(nim) and not pd.isna(nim)
-        show_image(ax, panels[n]["geom"], title=n)
+        show_image(ax, panels[n]["geom"], title=ctx.label(n))
         if suspect and e.get("flat_mode"):
             # A few tens of wavenumbers on a methyl or hydroxyl rotor is a flat coordinate,
             # not a reaction saddle. Calling it "NOT A MINIMUM" in red overstates it.

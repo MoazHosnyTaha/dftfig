@@ -8,7 +8,7 @@ records carry that, each answering a different question:
                             of the settings that could have changed the numbers
   runs/manifest.json        what the run as a whole produced - every input, output, cube
                             and figure file with its size and SHA-256
-  the Figure 2 stamp        the two identifiers (version, config hash) that let a printed
+  the frontier_orbitals stamp        the two identifiers (version, config hash) that let a printed
                             figure be matched back to the run directory it came from
 
 `dft verify` re-checks the manifest against what is on disk and exits non-zero if
@@ -162,7 +162,7 @@ def keyword_lines(cfg: dict, name: str, solvent: str) -> dict[str, str]:
 
 
 def stamp(cfg: dict) -> dict:
-    """The run-level identifiers that go on every row of descriptors.csv and on Figure 2."""
+    """The run-level identifiers that go on every row of descriptors.csv and on the frontier_orbitals figure."""
     return {"dftfig_version": __version__, "config_sha": config_sha(cfg)}
 
 

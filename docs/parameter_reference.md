@@ -356,7 +356,7 @@ One full set of calculations is run per entry. 'gas' adds a vacuum reference.
 
 | value | name | what it means | preset |
 |---|---|---|---|
-| `water` | Water (eps 78.4) | The manuscript's reference medium for Figure 2. | `paper` `recommended` `fast` |
+| `water` | Water (eps 78.4) | The manuscript's reference medium for the frontier_orbitals figure. | `paper` `recommended` `fast` |
 | `methanol` | Methanol (eps 32.6) | Polar protic. | `paper` |
 | `chloroform` | Chloroform (eps 4.7) | Low dielectric; where CPCM and IEF-PCM differ most. | `paper` |
 | `dmso` | DMSO (eps 46.7) | Polar aprotic. | `paper` |
@@ -376,6 +376,25 @@ Performs a single-point calculation at a larger basis on the optimized geometry,
 **How to choose.** Keep on. This is the step the manuscript implies but never describes: its Methods give 6-31+G(d,p) while the MEP section quotes 6-311++G(d,p), with no single point in between. Making it explicit is what lets you label every figure with the level of theory that actually produced it.
 
 **Cost.** One SCF, no gradient - typically 5-15% of the optimization cost.
+
+### `property.functional_sp`
+**Functional (property step)** · type `choice` · default ``
+
+The functional for the property single point, independent of the one used for the geometry optimization.
+
+**How to choose.** Empty means reuse the optimization functional, which is the usual choice. Set it when you want a cheap functional to find the geometry and a better one to report orbital energies from - r2SCAN-3c to optimize and wB97X-D4 for the single point is a common pairing. A composite (anything '-3c') carries its own basis and dispersion, so property.basis_sp is ignored for it.
+
+**Cost.** A single point is far cheaper than an optimization, so a more expensive functional here costs little.
+
+| value | name | what it means | preset |
+|---|---|---|---|
+| `` | Same as the optimization | Reuse theory.functional for the property step. | `recommended` |
+| `B3LYP` | B3LYP | The functional used in the manuscript. Reliable ground-state geometries for organics; underestimates barriers; no dispersion of its own. | `paper` |
+| `B3LYP D3BJ` | B3LYP-D3BJ | B3LYP plus Grimme's D3 dispersion with Becke-Johnson damping. Essentially free, and strictly better than bare B3LYP for anything involving stacking or intramolecular contacts. |  |
+| `PBE0 D3BJ` | PBE0-D3BJ | Parameter-free hybrid, 25% exact exchange. Often better orbital energies and gaps than B3LYP. |  |
+| `wB97X-D4` | wB97X-D4 | Range-separated hybrid with D4 dispersion. The most reliable general-purpose choice today for geometries, gaps and non-covalent interaction energies. | `recommended` |
+| `M062X` | M06-2X | Heavily parameterized meta-hybrid, good for main-group thermochemistry and non-covalent complexes. Needs a dense integration grid (DefGrid3). |  |
+| `r2SCAN-3c` | r2SCAN-3c | Composite method: meta-GGA with its own fitted triple-zeta basis and dispersion baked in. Very fast and surprisingly accurate - ignores the basis_opt setting. | `fast` |
 
 ### `property.basis_sp`
 **Basis set (property step)** · type `choice` · default `def2-TZVP`
@@ -459,14 +478,14 @@ Whether to average Fukui indices over near-degenerate frontier orbitals.
 | `none` | None | Straight finite differences of the atomic populations. | `paper` `recommended` |
 
 ## Volumetric data (cube files)  (`cubes`)
-*The 3D grids behind the orbital and MEP panels of Figure 2.*
+*The 3D grids behind the orbital and MEP panels of the frontier_orbitals figure.*
 
 ### `cubes.enabled`
 **Generate cube files** · type `bool` · default `True`
 
 Writes Gaussian-format .cube files for the frontier orbitals, the electron density and the electrostatic potential.
 
-**How to choose.** Needed for Figure 2 panels B and C and for Figure 13. The cubes are also directly loadable in Avogadro and GaussView if you want to look around interactively.
+**How to choose.** Needed for the frontier_orbitals panels B and C and for the lipophilicity figure. The cubes are also directly loadable in Avogadro and GaussView if you want to look around interactively.
 
 **Cost.** Cube generation is cheap; the MEP evaluation is the slow part (see cubes.esp).
 
@@ -484,11 +503,11 @@ Resolution of the volumetric grid. The cube contains this value cubed points in 
 
 Selects the molecular orbitals written as cubes.
 
-**How to choose.** homo_lumo covers Figure 2B. Extend to homo_lumo_pm1 when a frontier orbital is nearly degenerate with the one below/above it and a single-orbital picture would mislead - check the orbital energies in descriptors.csv first.
+**How to choose.** homo_lumo covers frontier_orbitals panel B. Extend to homo_lumo_pm1 when a frontier orbital is nearly degenerate with the one below/above it and a single-orbital picture would mislead - check the orbital energies in descriptors.csv first.
 
 | value | name | what it means | preset |
 |---|---|---|---|
-| `homo_lumo` | HOMO and LUMO | The two frontier orbitals. What Figure 2B shows. | `paper` `recommended` `fast` |
+| `homo_lumo` | HOMO and LUMO | The two frontier orbitals. What frontier_orbitals panel B shows. | `paper` `recommended` `fast` |
 | `homo_lumo_pm1` | HOMO-1 ... LUMO+1 | Four orbitals - use when frontier orbitals are near-degenerate. |  |
 | `homo_lumo_pm2` | HOMO-2 ... LUMO+2 | Six orbitals. Rarely needed for a figure. |  |
 
@@ -497,7 +516,7 @@ Selects the molecular orbitals written as cubes.
 
 Evaluates V(r) at every grid point with orca_vpot and writes a matching ESP cube, which is then painted onto the density isosurface to make the MEP map.
 
-**How to choose.** Required for Figure 2C. Note this is a genuine quantum-mechanical MEP from the SCF density, not a point-charge approximation.
+**How to choose.** Required for frontier_orbitals panel C. Note this is a genuine quantum-mechanical MEP from the SCF density, not a point-charge approximation.
 
 **Cost.** Scales as (basis functions)^2 x (grid points). Roughly 5-10 min for a 30-atom molecule on an 80^3 grid at triple-zeta; use cubes.esp_nprocs to parallelize.
 
@@ -573,7 +592,7 @@ The electron-density contour that defines the molecular surface onto which the e
 
 The electrostatic potential is coloured from -value (red, electron-rich) to +value (blue, electron-poor). 0.05 a.u. is about 31 kcal/mol.
 
-**How to choose.** This is the single most abused setting in published MEP figures. If each panel is auto-scaled to its own min/max - which is what most GUIs do by default - then panels CANNOT be compared, because the same colour means a different potential in each one. Fixing one range across all molecules is what makes Figure 2C a real comparison. 0.05 a.u. suits neutral organics with hydroxyl and methoxy groups; widen it if your series includes charged species.
+**How to choose.** This is the single most abused setting in published MEP figures. If each panel is auto-scaled to its own min/max - which is what most GUIs do by default - then panels CANNOT be compared, because the same colour means a different potential in each one. Fixing one range across all molecules is what makes frontier_orbitals panel C a real comparison. 0.05 a.u. suits neutral organics with hydroxyl and methoxy groups; widen it if your series includes charged species.
 
 ### `render.esp_scale`
 **MEP scaling mode** · type `choice` · default `auto_shared`
@@ -669,7 +688,7 @@ Tessellation density of the molecular and isodensity surfaces. Higher values sub
 
 How far per-atom colours are blended across the molecular surface (PyMOL's surface_color_smoothing_threshold).
 
-**How to choose.** This controls colour banding, not geometry. Each surface vertex takes its colour from the nearest atom, so with little smoothing you get hard-edged patches wherever two atoms of different value meet - the blocky look on a lipophilicity map. 0.30 blends them into a continuous gradient, which is the honest rendering of a fragment-based potential anyway, since the underlying quantity is a distance-weighted sum rather than a per-atom step function. Compared side by side on a carbazole: PyMOL's default of 0.05 and a value of 0.30 both leave visible angular wedges; 0.80 gives a continuous gradient while each feature is still clearly attributable to its atom; 1.00 begins to wash out small localized features. Lower it toward 0.05 if you want to see exactly which atom owns which patch. Affects only per-atom colouring (Figure 13), not the ramp-coloured MEP surface, which is already continuous.
+**How to choose.** This controls colour banding, not geometry. Each surface vertex takes its colour from the nearest atom, so with little smoothing you get hard-edged patches wherever two atoms of different value meet - the blocky look on a lipophilicity map. 0.30 blends them into a continuous gradient, which is the honest rendering of a fragment-based potential anyway, since the underlying quantity is a distance-weighted sum rather than a per-atom step function. Compared side by side on a carbazole: PyMOL's default of 0.05 and a value of 0.30 both leave visible angular wedges; 0.80 gives a continuous gradient while each feature is still clearly attributable to its atom; 1.00 begins to wash out small localized features. Lower it toward 0.05 if you want to see exactly which atom owns which patch. Affects only per-atom colouring (the lipophilicity figure), not the ramp-coloured MEP surface, which is already continuous.
 
 ### `render.surface_transparency`
 **Surface transparency** · type `float` · default `0.25` · range `0.0–1.0`
@@ -730,16 +749,23 @@ Directory scanned for plain .py figure modules, relative to the project director
 
 **How to choose.** This is the no-packaging route: drop a file defining NAME, REQUIRES and build(ctx) into ./dft_figures and it is discovered on the next run. A figure you want to share instead goes in a pip-installable package that registers the 'dftfig.figures' entry-point group - both routes land in the same registry. See docs/writing-a-figure.md.
 
+### `figures.labels`
+**Display names for the figures** · type `kvlist` · default `{}`
+
+Map a molecule name to the label the figures should show.
+
+**How to choose.** Molecule names come from the SDF file names and become directory names, so they are often long and machine-generated - a PubChem conformer download gives you Conformer3D_COMPOUND_CID_176870. Set Conformer3D_COMPOUND_CID_176870: Erlotinib here and the figures say Erlotinib while the run directories and ORCA files keep their original names, so nothing is recomputed. Leave a molecule out and its own name is used.
+
 ### `figures.reference_solvent`
 **Solvent shown in the figures** · type `choice` · default `water`
 
 Which solvent's results are used for the figure panels when several were calculated.
 
-**How to choose.** The manuscript shows water in Figure 2 and relegates the other solvents to the supplement. Must be one of the solvents you actually calculated.
+**How to choose.** The manuscript shows water in the frontier_orbitals figure and relegates the other solvents to the supplement. Must be one of the solvents you actually calculated.
 
 | value | name | what it means | preset |
 |---|---|---|---|
-| `water` | Water | The manuscript's choice for Figure 2. | `paper` `recommended` `fast` |
+| `water` | Water | The manuscript's choice for the frontier_orbitals figure. | `paper` `recommended` `fast` |
 | `gas` | Gas phase | The only medium in which Koopmans descriptors are physically interpretable. |  |
 | `methanol` | Methanol |  |  |
 | `chloroform` | Chloroform |  |  |
@@ -781,7 +807,7 @@ How panel letters are drawn in the assembled figures.
 | `none` | No letters | For a single-panel figure. |  |
 
 ### `figures.ph_range`
-**pH range for Figure 12B** · type `str` · default `0,14`
+**pH range for the speciation curve** · type `str` · default `0,14`
 
 Minimum and maximum pH of the speciation curve, comma separated.
 
@@ -790,14 +816,14 @@ Minimum and maximum pH of the speciation curve, comma separated.
 ### `figures.physiological_ph`
 **Physiological pH marker** · type `float` · default `7.4`
 
-The pH at which the predominant species is annotated in Figure 12B.
+The pH at which the predominant species is annotated in the speciation figureB.
 
 **How to choose.** 7.4 is blood plasma. Use 6.5 for the small-intestine lumen or 1.5 for gastric fluid if you are arguing about oral absorption.
 
 ### `figures.mlp_palette`
 **Lipophilicity palette** · type `choice` · default `paper`
 
-Colour ramp for the molecular lipophilicity potential surface in Figure 13.
+Colour ramp for the molecular lipophilicity potential surface in the lipophilicity figure.
 
 **How to choose.** 'paper' matches the manuscript's caption exactly - red for the least lipophilic fragments through to blue for the most lipophilic. Note this is the OPPOSITE of the convention most medicinal chemists expect (blue usually means polar), so whichever you choose, the caption has to say so. 'conventional' uses blue = hydrophilic, orange = lipophilic.
 
@@ -809,7 +835,7 @@ Colour ramp for the molecular lipophilicity potential surface in Figure 13.
 ### `figures.mlp_transparency`
 **Lipophilicity surface transparency** · type `float` · default `0.35` · range `0.0–1.0`
 
-Transparency of the Figure 13 surfaces: 0 = opaque, 1 = invisible.
+Transparency of the lipophilicity figure surfaces: 0 = opaque, 1 = invisible.
 
 **How to choose.** A fully opaque surface hides the molecule, so the reader cannot tell which atom a coloured patch belongs to - the same objection that applies to an unlabelled MEP map. 0.3-0.4 lets the skeleton read through while keeping the colours saturated. Push past 0.5 and the colour washes out; set 0 only if you specifically want the classic solid surface.
 
@@ -848,7 +874,7 @@ Optional CSV of measured or externally predicted values. Anything in it override
 ### `figures.pka_source`
 **Where pKa comes from** · type `choice` · default `predict`
 
-How the acidic and basic pKa values behind Figure 12 and logD are obtained.
+How the acidic and basic pKa values behind the speciation figure and logD are obtained.
 
 **How to choose.** 'predict' needs nothing from you: a curated SMARTS table assigns a class average pKa to every ionizable group it recognises - carboxylic acid, phenol, aliphatic amine, pyridine, imidazole, tetrazole and about thirty more - and reports the groups it found alongside the number. Expect +-1 to 1.5 log units, which settles whether a compound is charged at pH 7.4 but is not a value to quote in a paper. 'csv' uses only what you supply and leaves the rest blank. 'none' switches ionization off entirely, which draws every compound at the formal charge of the structure you gave.
 
@@ -861,7 +887,7 @@ How the acidic and basic pKa values behind Figure 12 and logD are obtained.
 ### `figures.logd_source`
 **Where logD(7.4) comes from** · type `choice` · default `derive`
 
-How the buffer lipophilicity on Figure 14 is obtained.
+How the buffer lipophilicity on the mpo_metabolism figure is obtained.
 
 **How to choose.** 'derive' computes logD from Crippen logP and the ionization model: only the neutral microspecies is taken to partition, which is the standard approximation. It is a lower bound for strong bases, where ion pairing adds roughly one unit, and it is a floor rather than a prediction for a permanently charged compound, which has no neutral form at all. 'csv' uses only supplied values. 'none' leaves the axis empty unless the CSV fills it.
 
@@ -869,12 +895,12 @@ How the buffer lipophilicity on Figure 14 is obtained.
 |---|---|---|---|
 | `derive` | Derive from clogP and the predicted pKa | Self-contained; labelled on the figure as derived. | `recommended` `fast` |
 | `csv` | Only what the properties CSV gives | For measured logD or an external ADMET prediction. | `paper` |
-| `none` | No logD | Figure 14 panel A falls back to clogP. |  |
+| `none` | No logD | the mpo_metabolism figure panel A falls back to clogP. |  |
 
 ### `figures.som_source`
 **Site-of-metabolism source** · type `choice` · default `fukui_radical`
 
-Where the per-atom metabolic-lability weights for Figure 14 B-E come from.
+Where the per-atom metabolic-lability weights for the mpo_metabolism figure B-E come from.
 
 **How to choose.** 'fukui_radical' uses the condensed radical Fukui index f0 that this pipeline already computes - susceptibility to radical attack is a recognized quantum-chemical proxy for the hydrogen abstraction and aromatic oxidation steps that CYP450 performs, so the panel is fully reproducible from your own DFT with no external service. It is a reactivity proxy, NOT a trained site-of-metabolism model: it knows nothing about how the substrate binds in the enzyme active site, which is often what decides the real site. 'csv' reads measured or predicted probabilities you export from XenoSite or ADMETlab; use that when you have them and say in the caption which source you used. 'both' prefers the CSV and silently falls back to Fukui where a file is missing.
 
@@ -887,7 +913,7 @@ Where the per-atom metabolic-lability weights for Figure 14 B-E come from.
 ### `figures.som_dir`
 **Site-of-metabolism directory** · type `path` · default `data/som`
 
-Directory holding <molecule>.csv files mapping atom index to metabolism probability, used for Figure 14 panels B-E.
+Directory holding <molecule>.csv files mapping atom index to metabolism probability, used for the mpo_metabolism figure panels B-E.
 
 **How to choose.** Export these from XenoSite or ADMETlab's SOM module. Format: two columns, atom_index (1-based, matching the SMILES atom order) and probability (0-1). If a file is missing, that panel is drawn greyed out with a note rather than silently omitted.
 

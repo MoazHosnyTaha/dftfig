@@ -141,7 +141,7 @@ def collect(cfg: dict) -> pd.DataFrame:
             # a descriptors.csv that has been copied into a manuscript directory still
             # carries the version, the ORCA that ran, the two keyword lines and the
             # settings hash. `dftfig_version` and `config_sha` are also stamped on
-            # Figure 2, which is what lets a printed figure be matched back to a row.
+            # the frontier_orbitals figure, which is what lets a printed figure be matched back to a row.
             row["dftfig_version"] = _stamp["dftfig_version"]
             row["orca_version"] = provenance.orca_version_of(sp)
             row.update(provenance.keyword_lines(cfg, name, solvent))

@@ -92,7 +92,7 @@ STEP_PURPOSE = {
         "molecule is attacked by an electrophile, a nucleophile or a radical.",
     "Volumetric data (cube files)":
         "The grids the 3D pictures are drawn from: HOMO and LUMO, the total density, and "
-        "the electrostatic potential mapped onto it. This is where Figure 2 comes from.",
+        "the electrostatic potential mapped onto it. This is where the frontier_orbitals figure comes from.",
     "3D rendering":
         "How those grids are turned into images - isovalues, colours, transparency, "
         "camera.",
@@ -121,6 +121,7 @@ def _relevant(key: str, cfg: dict) -> bool:
         "theory.saddle_small_mode_cm": lambda: bool(g("theory.run_freq"))
                                                and g("theory.saddle_max_attempts") > 0,
         "theory.aux_basis":            lambda: g("theory.ri_approx") != "none",
+        "property.functional_sp":      lambda: bool(g("property.enabled")),
         "property.basis_sp":           lambda: bool(g("property.enabled")),
         "property.population":         lambda: bool(g("property.enabled")),
         "property.koopmans_mode":      lambda: bool(g("property.enabled")),

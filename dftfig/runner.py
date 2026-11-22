@@ -14,7 +14,7 @@ from rich.progress import (BarColumn, MofNCompleteColumn, Progress, SpinnerColum
                            TextColumn, TimeElapsedColumn)
 
 from . import parsers
-from .theme import PALETTE, console, warn
+from .theme import PALETTE, console, note, warn
 
 #: Live ORCA child processes, so an interrupt can stop them instead of orphaning them.
 _LIVE: dict[int, subprocess.Popen] = {}
@@ -129,6 +129,38 @@ def _set_pal(inp: Path, nprocs: int) -> None:
     inp.write_text("\n".join(lines) + "\n")
 
 
+def _keyword_line_of(path: Path) -> str | None:
+    """The ORCA '!' line, read from an input file or from its echo in an output."""
+    try:
+        text = path.read_text(errors="replace")
+    except OSError:
+        return None
+    for raw in text.splitlines():
+        line = raw.strip()
+        # ORCA echoes the input into the output as "|  1> ! B3LYP ...".
+        if line.startswith("|") and ">" in line:
+            line = line.split(">", 1)[1].strip()
+        if line.startswith("!"):
+            return " ".join(line.split())
+        if line.startswith("*") or line.lower().startswith("%coords"):
+            break            # past the keyword block
+    return None
+
+
+def _keywords_changed(inp: Path, out: Path) -> tuple[str, str] | None:
+    """(old, new) when a finished output was produced at a different level of theory.
+
+    `resume` reuses any job that terminated normally, which is right for an interrupted
+    run and wrong after the functional or basis is changed: the numbers would stay at
+    the old level while the figure footnote claims the new one. Only the keyword line is
+    compared, so a change in process count still resumes.
+    """
+    want, have = _keyword_line_of(inp), _keyword_line_of(out)
+    if want is None or have is None or want == have:
+        return None
+    return have, want
+
+
 def run_job(cfg: dict, inp: Path, label: str = "") -> JobResult:
     """Execute one ORCA input. Returns a JobResult; never raises on calculation failure."""
     inp = Path(inp)
@@ -136,8 +168,12 @@ def run_job(cfg: dict, inp: Path, label: str = "") -> JobResult:
     tools = _orca_tools(cfg["execution"]["orca_path"])
 
     if cfg["execution"]["resume"] and out.exists() and parsers.terminated_normally(out):
-        return JobResult(ok=True, input=str(inp), output=str(out), reused=True,
-                         wall_s=parsers.wall_time_s(out) or 0.0, label=label)
+        stale = _keywords_changed(inp, out)
+        if stale is None:
+            return JobResult(ok=True, input=str(inp), output=str(out), reused=True,
+                             wall_s=parsers.wall_time_s(out) or 0.0, label=label)
+        note(f"{label or inp.stem}: recomputing, the level of theory changed\n"
+             f"      was: {stale[0]}\n      now: {stale[1]}")
 
     if cfg["execution"]["dry_run"]:
         return JobResult(ok=True, input=str(inp), output=None, dry_run=True, label=label)
