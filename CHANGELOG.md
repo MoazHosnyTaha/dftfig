@@ -6,6 +6,17 @@ and this project uses [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-11-22
+
+First public release.
+
+The version numbers below 0.5.0 in this file are from private development before the
+repository was made public; they are kept because they record why several defaults are
+what they are. The public API is **not** yet stable: the figure plugin contract
+(`dftfig.figureapi`, `API_VERSION = 1`) may still change in response to the first people
+who write against it. Version 1.0.0 is reserved for the point at which it is declared
+stable.
+
 ### Added
 - A documented, versioned figure plugin API (`dftfig/figureapi.py`, `API_VERSION = 1`).
   A figure is now a module that declares `NAME`, `TITLE` and `REQUIRES` and exposes
