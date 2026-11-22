@@ -24,3 +24,7 @@ htmlcov/
 .vscode/
 .idea/
 .DS_Store
+
+# scratch directories used while reproducing a user run
+repro/
+relabel/
