@@ -6,9 +6,10 @@ can be traced back to - and re-run from - the exact commands that drew it.
 from __future__ import annotations
 
 import subprocess
+import time
 from pathlib import Path
 
-from .theme import bad, warn
+from .theme import bad, console, note, warn
 
 #: The named PyMOL colours the ramps below are written in, as RGB. A matplotlib colour
 #: bar has to be built from the same numbers the 3D panel was painted with, or the bar
@@ -41,19 +42,31 @@ def find_pymol(cfg: dict) -> str | None:
     return str(p) if p else None
 
 
-def _run_pymol(cfg: dict, script: Path, expect: Path | None = None) -> bool:
+def _run_pymol(cfg: dict, script: Path, expect: Path | None = None,
+               label: str = "") -> bool:
     """Run a .pml headlessly and confirm it actually produced its image.
 
     PyMOL launchers can exit 0 without rendering anything, so the exit code is not
     sufficient evidence - the output file is.
+
+    PyMOL is silent until it finishes, and a dense cube on a drug-sized molecule can
+    take a while, so a spinner runs for the duration. Without it the figures stage
+    looks identical to a hang - which is exactly how it was first reported.
     """
     exe = find_pymol(cfg)
     if exe is None:
         bad("PyMOL executable not found. Set render.pymol_path, or install it with "
             "`conda install -c conda-forge pymol-open-source`.")
         return False
-    proc = subprocess.run([exe, "-cq", script.name], capture_output=True, text=True,
-                          cwd=str(script.parent))
+    what = label or script.stem
+    t0 = time.time()
+    with console.status(f"[muted]rendering {what}[/muted]", spinner="dots"):
+        proc = subprocess.run([exe, "-cq", script.name], capture_output=True, text=True,
+                              cwd=str(script.parent))
+    dt = time.time() - t0
+    # Only the slow ones are worth a line; a fast render would just add noise.
+    if dt >= 5.0:
+        note(f"rendered {what} in {dt:.0f} s")
     tail = (proc.stderr or "") + (proc.stdout or "")
     if proc.returncode != 0:
         bad(f"PyMOL exited {proc.returncode} on {script.name}: {tail[-400:]}")
@@ -165,7 +178,7 @@ def render_geometry(cfg: dict, name: str, solvent: str, mcs_indices=None) -> Pat
     s += _orient(cfg, "mol", mcs_indices) + _png(cfg, out)
     script = work / f"render_geom_{name}.pml"
     script.write_text("\n".join(s) + "\n")
-    return out if _run_pymol(cfg, script, out) else None
+    return out if _run_pymol(cfg, script, out, f"{name} geometry") else None
 
 
 def render_orbital(cfg: dict, name: str, solvent: str, which: str,
@@ -198,7 +211,7 @@ def render_orbital(cfg: dict, name: str, solvent: str, which: str,
     s += _orient(cfg, "mol" if xyz.exists() else "orb_p", mcs_indices) + _png(cfg, out)
     script = work / f"render_{which}_{name}.pml"
     script.write_text("\n".join(s) + "\n")
-    return out if _run_pymol(cfg, script, out) else None
+    return out if _run_pymol(cfg, script, out, f"{name} {which.upper()}") else None
 
 
 def render_mep(cfg: dict, name: str, solvent: str,
@@ -246,7 +259,7 @@ def render_mep(cfg: dict, name: str, solvent: str,
     s += _orient(cfg, "mol" if xyz.exists() else "surf", mcs_indices) + _png(cfg, out)
     script = work / f"render_mep_{name}.pml"
     script.write_text("\n".join(s) + "\n")
-    return out if _run_pymol(cfg, script, out) else None
+    return out if _run_pymol(cfg, script, out, f"{name} electrostatic potential") else None
 
 
 def render_mlp(cfg: dict, name: str, pdb: Path, lo: float, hi: float,
@@ -287,7 +300,7 @@ def render_mlp(cfg: dict, name: str, pdb: Path, lo: float, hi: float,
     s += _orient(cfg, "surf", mcs_indices) + _png(cfg, out)
     script = work / f"render_mlp_{name}.pml"
     script.write_text("\n".join(s) + "\n")
-    return out if _run_pymol(cfg, script, out) else None
+    return out if _run_pymol(cfg, script, out, f"{name} lipophilicity surface") else None
 
 
 def write_sp_geometry(cfg: dict, name: str, solvent: str) -> Path | None:

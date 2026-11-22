@@ -13,13 +13,14 @@ from __future__ import annotations
 
 import argparse
 import sys
+import time
 from pathlib import Path
 
 from . import config as C
 from . import cubes as cubemod
 from . import descriptors as descmod
 from . import geom, orca_io, properties, runner
-from .theme import banner, console, ok, step, warn, bad
+from .theme import bad, banner, console, note, ok, step, warn
 
 STAGES = ["build", "opt", "sp", "fukui", "cubes", "descriptors", "figures"]
 
@@ -336,7 +337,19 @@ def stage_figures(cfg, specs, df):
         if unmet:
             warn(f"{name} ({spec.title}) skipped - {'; '.join(unmet)}")
             continue
-        made += list(spec.build(ctx))
+        # Say which figure is being built BEFORE building it. A figure that needs 3D
+        # panels can spend minutes inside PyMOL, and until this line existed the stage
+        # printed nothing at all between the banner and the first finished figure.
+        console.print(f"  [stage]->[/stage]  building [value]{name}[/value]"
+                      f"   [muted]{spec.title}[/muted]")
+        t0 = time.time()
+        files = list(spec.build(ctx))
+        made += files
+        # The figure module prints its own "OK ... -> file.png"; only the elapsed time
+        # is new information, and only when it was long enough to have been worrying.
+        dt = time.time() - t0
+        if files and dt >= 10.0:
+            note(f"{name} took {dt:.0f} s")
     return made
 
 

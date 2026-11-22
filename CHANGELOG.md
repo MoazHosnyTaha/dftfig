@@ -6,6 +6,13 @@ and this project uses [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- The figures stage shows what it is doing. It names each figure before building it,
+  reports anything that took more than ten seconds, and runs a spinner while PyMOL is
+  working. PyMOL is silent until it exits, so a dense cube on a drug-sized molecule gave
+  minutes of blank terminal that were indistinguishable from a hang - which is exactly
+  how it was first reported.
+
 ### Changed
 - The README is 133 lines instead of 987. Installing, running, the figures, the commands
   and the citation stay; the reference material moved to `docs/usage.md`,
