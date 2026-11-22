@@ -121,9 +121,12 @@ def build(ctx: FigureContext) -> list:
         ax.set_xticklabels([f"{e}{i}" for e, i in zip(t["element"], t["atom_index_1based"])],
                            rotation=90, fontsize=6)
         ax.set_ylim(0, top * 1.15)
-        ax.set_title(f"{name}   {ctx.compound(name).formula}", fontsize=9)
+        # The panel letter is drawn just above the axes, so the title needs to
+        # sit below it rather than share the line.
+        ax.set_title(f"{name}   {ctx.compound(name).formula}", fontsize=9, pad=3)
         ax.spines[["top", "right"]].set_visible(False)
-        panel_letter(ax, "ABCDEFGH"[k], ctx.param("figures.panel_label_style"))
+        panel_letter(ax, "ABCDEFGH"[k], ctx.param("figures.panel_label_style"),
+                     dy=1.13)
         if k == 0:
             ax.set_ylabel("condensed Fukui index")
             ax.legend(loc="upper left", fontsize=6.5, framealpha=0.9)
