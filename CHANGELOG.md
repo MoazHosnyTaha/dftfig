@@ -6,6 +6,15 @@ and this project uses [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Changed
+- The README is 133 lines instead of 987. Installing, running, the figures, the commands
+  and the citation stay; the reference material moved to `docs/usage.md`,
+  `docs/methods.md` and `docs/troubleshooting.md`, linked from a table. Nothing was
+  deleted.
+- The last references to the manuscript's figure numbers are gone from the prose: the
+  renamed figures are now called `frontier_orbitals`, `speciation`, `lipophilicity` and
+  `mpo_metabolism` everywhere, not only in the code.
+
 ## [0.6.0] - 2026-11-22
 
 ### Changed
