@@ -10,6 +10,15 @@ from pathlib import Path
 
 from .theme import bad, warn
 
+#: The named PyMOL colours the ramps below are written in, as RGB. A matplotlib colour
+#: bar has to be built from the same numbers the 3D panel was painted with, or the bar
+#: under the figure means something slightly different from the surfaces above it.
+PYMOL_RGB = {
+    "red": (1.0, 0.0, 0.0), "orange": (1.0, 0.5, 0.0), "yellow": (1.0, 1.0, 0.0),
+    "green": (0.0, 1.0, 0.0), "cyan": (0.0, 1.0, 1.0), "blue": (0.0, 0.0, 1.0),
+    "white": (1.0, 1.0, 1.0), "purple": (0.5, 0.0, 0.5),
+}
+
 #: ESP colour ramps. Values are fractions of render.esp_range.
 ESP_PALETTES = {
     # The manuscript's sequence: red = electron-rich (negative V), blue = electron-poor.

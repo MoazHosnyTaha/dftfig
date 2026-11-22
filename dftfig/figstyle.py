@@ -10,6 +10,26 @@ SIZES = (9, 8, 7)
 GREY = "#4A4A4A"
 
 
+def esp_colormap(palette: str):
+    """Matplotlib colormap for the MEP colour bar, built from the PyMOL ramp itself."""
+    from matplotlib.colors import LinearSegmentedColormap
+
+    from .render import ESP_PALETTES, PYMOL_RGB
+    stops, colors = ESP_PALETTES[palette]
+    pos = [(s + 1.0) / 2.0 for s in stops]
+    return LinearSegmentedColormap.from_list(
+        f"esp_{palette}", list(zip(pos, [PYMOL_RGB[c] for c in colors])))
+
+
+def mlp_colormap(palette: str):
+    """Matplotlib colormap for the lipophilicity colour bar."""
+    from matplotlib.colors import LinearSegmentedColormap
+
+    from .render import MLP_PALETTES, PYMOL_RGB
+    return LinearSegmentedColormap.from_list(
+        f"mlp_{palette}", [PYMOL_RGB[c] for c in MLP_PALETTES[palette]])
+
+
 def apply_style(dpi: int = 300, sizes: tuple = SIZES) -> None:
     base, anno, tick = sizes
     mpl.rcParams.update({
