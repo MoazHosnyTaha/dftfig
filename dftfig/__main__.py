@@ -302,8 +302,20 @@ def stage_descriptors(cfg):
 
 
 def stage_figures(cfg, specs, df):
-    banner("figures", ", ".join(cfg["figures"]["which"]))
+    """Draw every figure named in figures.which, built-in or plugin.
+
+    Nothing here knows what a figure is called or what it needs: the registry answers
+    both. A figure whose requirements this run cannot meet is skipped with the reason,
+    which is the difference between "PyMOL is not installed" and a traceback out of the
+    renderer halfway through a six-hour run.
+    """
+    from . import figureapi
     from . import mlp as mlpmod
+
+    which = cfg["figures"]["which"]
+    banner("figures", ", ".join(which))
+    registry = figureapi.available(cfg)
+
     mols = {n: s.mol for n, s in specs.items()}
     rd = {n: mlpmod.rdkit_properties(m) for n, m in mols.items()}
     prop_df = properties.load_properties(cfg, rd, mols=mols)
@@ -311,21 +323,20 @@ def stage_figures(cfg, specs, df):
     out.mkdir(parents=True, exist_ok=True)
     prop_df.to_csv(out / "properties_resolved.csv", index=False, float_format="%.4f")
 
+    ctx = figureapi.build_context(cfg, specs, df, prop_df)
     made = []
-    which = cfg["figures"]["which"]
-    if "fig2" in which:
-        from .figures import fig2
-        made += fig2.build(cfg, mols, df)
-    if "fig12" in which:
-        from .figures import fig12
-        made += fig12.build(cfg, mols, prop_df,
-                            charges={n: s.charge for n, s in specs.items()})
-    if "fig13" in which:
-        from .figures import fig13
-        made += fig13.build(cfg, mols, prop_df)
-    if "fig14" in which:
-        from .figures import fig14
-        made += fig14.build(cfg, mols, prop_df)
+    for name in which:
+        spec = registry.get(name)
+        if spec is None:
+            bad(f"no figure named {name!r}. Available: "
+                f"{', '.join(sorted(registry)) or '(none)'}. A plugin file goes in "
+                f"{figureapi.plugin_dir(cfg)}/.")
+            continue
+        unmet = ctx.unmet(spec.requires)
+        if unmet:
+            warn(f"{name} ({spec.title}) skipped - {'; '.join(unmet)}")
+            continue
+        made += list(spec.build(ctx))
     return made
 
 

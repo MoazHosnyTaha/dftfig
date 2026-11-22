@@ -1,8 +1,12 @@
-"""Figure 14 - CNS MPO physicochemical space and site-of-metabolism maps."""
+"""CNS MPO physicochemical space and site-of-metabolism maps.
+
+Reference implementation of a figure that reads a per-atom table - the condensed Fukui
+indices - and paints it onto a 2D depiction. The context locates the table; folding the
+hydrogens onto their heavy atoms is this figure's own chemistry and stays here.
+"""
 from __future__ import annotations
 
 import io
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -11,9 +15,13 @@ from matplotlib.gridspec import GridSpec
 from rdkit import Chem
 from rdkit.Chem.Draw import SimilarityMaps, rdMolDraw2D
 
-from ..figstyle import apply_style, caption, panel_letter
+from ..figstyle import caption, panel_letter
+from ..figureapi import REQ_PROPERTIES, FigureContext
 from ..theme import warn
-from .fig2 import _save
+
+NAME = "fig14"
+TITLE = "Figure 14 - CNS MPO space and predicted sites of metabolism"
+REQUIRES = (REQ_PROPERTIES,)
 
 HUES = ["#7C4DFF", "#00A5A5", "#FF8A3D", "#C2185B", "#2E7D32", "#5D4037"]
 
@@ -29,16 +37,15 @@ def _som_image(mol: Chem.Mol, weights: np.ndarray, size=(380, 320)):
     return np.array(PIL.Image.open(io.BytesIO(d.GetDrawingText())))
 
 
-def _load_fukui_radical(cfg: dict, name: str, mol: Chem.Mol):
+def _fukui_radical(ctx: FigureContext, name: str, mol: Chem.Mol):
     """Per-heavy-atom radical Fukui index f0, mapped onto the heavy-atom depiction order."""
-    ref = cfg["figures"]["reference_solvent"]
-    path = Path(cfg["execution"]["work_dir"]) / name / f"fukui_{name}_{ref}.csv"
-    if not path.exists():
+    t = ctx.fukui(name)
+    if t is None:
         return None, "run the descriptors stage first"
-    t = pd.read_csv(path)
     if "f_zero" not in t.columns:
         return None, "f_zero column missing"
-    # ORCA atom order equals RDKit order for the all-atom molecule (hydrogens included).
+    # The contract guarantees the Fukui table is indexed by the same atom order as
+    # Compound.mol, hydrogens included.
     full = np.zeros(mol.GetNumAtoms())
     for _, r in t.iterrows():
         i = int(r["atom_index_0based"])
@@ -47,23 +54,19 @@ def _load_fukui_radical(cfg: dict, name: str, mol: Chem.Mol):
     # Fold each hydrogen's value onto the heavy atom it is bonded to, then drop hydrogens:
     # CYP abstraction at a C-H is reported at the carbon.
     heavy_ids = [a.GetIdx() for a in mol.GetAtoms() if a.GetAtomicNum() > 1]
-    folded = {}
-    for hid in heavy_ids:
-        folded[hid] = full[hid]
+    folded = {hid: full[hid] for hid in heavy_ids}
     for a in mol.GetAtoms():
         if a.GetAtomicNum() == 1:
             for nb in a.GetNeighbors():
                 if nb.GetIdx() in folded:
                     folded[nb.GetIdx()] += full[a.GetIdx()]
-    w = np.array([folded[i] for i in heavy_ids])
-    return w, None
+    return np.array([folded[i] for i in heavy_ids]), None
 
 
-def _load_som(cfg: dict, name: str, n_heavy: int):
-    path = Path(cfg["figures"]["som_dir"]) / f"{name}.csv"
-    if not path.exists():
-        return None, f"{path.name} not found"
-    df = pd.read_csv(path)
+def _external_som(ctx: FigureContext, name: str, n_heavy: int):
+    df = ctx.som_table(name)
+    if df is None:
+        return None, f"{name}.csv not found"
     cols = {c.lower().strip(): c for c in df.columns}
     icol = cols.get("atom_index") or cols.get("atom") or list(df.columns)[0]
     pcol = cols.get("probability") or cols.get("prob") or cols.get("score") or list(df.columns)[1]
@@ -85,9 +88,9 @@ def _load_som(cfg: dict, name: str, n_heavy: int):
     return w, None
 
 
-def build(cfg: dict, mols: dict, prop_df: pd.DataFrame) -> list[Path]:
-    apply_style(int(cfg["figures"]["dpi"]))
-    names = list(mols)
+def build(ctx: FigureContext) -> list:
+    ctx.apply_style()
+    names = ctx.names
     nmol = len(names)
 
     fig = plt.figure(figsize=(max(7.2, 1.85 * nmol + 0.4), 7.0))
@@ -112,31 +115,29 @@ def build(cfg: dict, mols: dict, prop_df: pd.DataFrame) -> list[Path]:
     xs, ys, ss, cs, labels, mpos = [], [], [], [], [], []
     missing_logd, substituted, derived = [], [], []
     for n in names:
-        row = prop_df[prop_df["molecule"] == n]
-        if not len(row):
+        if ctx.property_row(n) is None:
             continue
-        r = row.iloc[0]
-        logd = r.get("logD74", np.nan)
-        tpsa = r.get("TPSA", np.nan)
+        logd = ctx.property(n, "logD74", np.nan)
+        tpsa = ctx.property(n, "TPSA", np.nan)
         if pd.isna(logd):
             # No measured or predicted logD: fall back to the calculated neutral logP
             # so the panel still carries information. These are NOT the same quantity -
             # for an ionizable or permanently charged compound logD(7.4) is lower, often
             # by several log units - so the substitution is labelled on the figure.
-            clogp = r.get("clogP_rdkit", np.nan)
+            clogp = ctx.property(n, "clogP_rdkit", np.nan)
             if not pd.isna(clogp):
                 logd = clogp
                 substituted.append(n)
         if pd.isna(logd) or pd.isna(tpsa):
             missing_logd.append(n)
             continue
-        if str(r.get("logD74_source", "")) == "derived":
+        if str(ctx.property(n, "logD74_source", "")) == "derived":
             derived.append(n)
-        papp = r.get("Papp_MDCK", np.nan)
+        papp = ctx.property(n, "Papp_MDCK", np.nan)
         size = 90.0 if pd.isna(papp) else 60.0 + 900.0 * float(papp) / 1e-4
         xs.append(float(logd)); ys.append(float(tpsa)); ss.append(size)
-        cs.append(float(r.get("cns_mpo", np.nan))); labels.append(n)
-        mpos.append(float(r.get("cns_mpo", np.nan)))
+        mpo = float(ctx.property(n, "cns_mpo", np.nan))
+        cs.append(mpo); labels.append(n); mpos.append(mpo)
 
     if xs:
         sc = axa.scatter(xs, ys, s=ss, c=cs, cmap="viridis", vmin=0, vmax=6,
@@ -216,20 +217,21 @@ def build(cfg: dict, mols: dict, prop_df: pd.DataFrame) -> list[Path]:
 
     # ---------------- Panels B-E: site-of-metabolism sensitivity maps -----------------
     letters = "BCDEFGHI"
+    source = ctx.param("figures.som_source")
     for j, n in enumerate(names):
         ax = fig.add_subplot(gs[1, j])
         ax.set_axis_off()
-        mol = mols.get(n)
-        if mol is None:
+        compound = ctx.compound(n)
+        if compound is None:
             continue
+        mol = compound.mol
         heavy = Chem.RemoveHs(Chem.Mol(mol))
-        source = cfg["figures"]["som_source"]
         w, err, used = None, None, ""
         if source in ("csv", "both"):
-            w, err = _load_som(cfg, n, heavy.GetNumAtoms())
+            w, err = _external_som(ctx, n, heavy.GetNumAtoms())
             used = "XenoSite/ADMETlab export"
         if w is None and source in ("fukui_radical", "both"):
-            w, err = _load_fukui_radical(cfg, n, mol)
+            w, err = _fukui_radical(ctx, n, mol)
             used = "radical Fukui index $f^{0}$"
         ax.set_title(f"{letters[j]}  {n}", fontsize=9)
         if w is None:
@@ -246,7 +248,7 @@ def build(cfg: dict, mols: dict, prop_df: pd.DataFrame) -> list[Path]:
             ax.annotate(f"weights from {used}", xy=(0.0, -0.22), xycoords="axes fraction",
                         fontsize=6.5, color="#707070", ha="left")
 
-    panel_letter(axa, "A", cfg["figures"]["panel_label_style"], dx=-0.075, dy=1.02)
+    panel_letter(axa, "A", ctx.param("figures.panel_label_style"), dx=-0.075, dy=1.02)
     fig.suptitle("Multiparameter optimization and predicted sites of metabolism",
                  fontsize=9.5, x=0.095, y=0.995, ha="left")
-    return _save(cfg, fig, "figure14")
+    return ctx.save(fig, "figure14")

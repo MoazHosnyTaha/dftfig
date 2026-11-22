@@ -1,19 +1,25 @@
-"""Figure 12 - acid-base analysis: pKa annotation and net charge versus pH."""
+"""Acid-base analysis: pKa annotation and net charge versus pH.
+
+Reference implementation of a figure that needs no 3D rendering at all - only the
+structures and the resolved property table.
+"""
 from __future__ import annotations
 
 import io
-from pathlib import Path
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 from matplotlib.gridspec import GridSpec
 from rdkit import Chem
 from rdkit.Chem.Draw import rdMolDraw2D
 
 from .. import properties as props
-from ..figstyle import apply_style, caption, panel_letter
-from .fig2 import _save
+from ..figstyle import caption, panel_letter
+from ..figureapi import REQ_PROPERTIES, FigureContext
+
+NAME = "fig12"
+TITLE = "Figure 12 - pKa annotation and net charge versus pH"
+REQUIRES = (REQ_PROPERTIES,)
 
 HUES = ["#7C4DFF", "#00A5A5", "#FF8A3D", "#C2185B", "#2E7D32", "#5D4037"]
 
@@ -45,8 +51,7 @@ def _annotated_2d(mol: Chem.Mol, acidic: list[float], basic: list[float],
     oh = [i for i in d_idx if m.GetAtomWithIdx(i).GetSymbol() == "O"]
     nh = [i for i in d_idx if m.GetAtomWithIdx(i).GetSymbol() == "N"]
     for pka, i in zip(sorted(acidic), oh + nh):
-        a = m.GetAtomWithIdx(i)
-        a.SetProp("atomNote", f"D p$K_a$ {pka:.1f}" if False else f"D {pka:.1f}")
+        m.GetAtomWithIdx(i).SetProp("atomNote", f"D {pka:.1f}")
 
     drawer = rdMolDraw2D.MolDraw2DCairo(*size)
     o = drawer.drawOptions()
@@ -69,23 +74,32 @@ def _annotated_2d(mol: Chem.Mol, acidic: list[float], basic: list[float],
     return np.array(PIL.Image.open(io.BytesIO(drawer.GetDrawingText())))
 
 
-def build(cfg: dict, mols: dict, prop_df: pd.DataFrame,
-          charges: dict | None = None) -> list[Path]:
-    apply_style(int(cfg["figures"]["dpi"]))
-    names = list(mols)
-    ph_lo, ph_hi = [float(x) for x in str(cfg["figures"]["ph_range"]).split(",")]
-    ph_phys = float(cfg["figures"]["physiological_ph"])
+def _ionization(ctx: FigureContext, name: str):
+    """(acidic pKa list, basic pKa list, source, permanent charge) for one compound."""
+    acidic = props.parse_pka_list(ctx.property(name, "pKa_acidic"))
+    basic = props.parse_pka_list(ctx.property(name, "pKa_basic"))
+    source = str(ctx.property(name, "pKa_source", ""))
+    # ctx.property() returns the default for a missing OR blank cell, which is what the
+    # old `int(row[...] or 0)` could not do: a NaN permanent_charge is truthy, so that
+    # expression reached int(nan) and raised.
+    perm = int(ctx.property(name, "permanent_charge", 0) or 0)
+    return acidic, basic, source, perm
+
+
+def build(ctx: FigureContext) -> list:
+    ctx.apply_style()
+    names = ctx.names
+    ph_lo, ph_hi = [float(x) for x in str(ctx.param("figures.ph_range")).split(",")]
+    ph_phys = float(ctx.param("figures.physiological_ph"))
     ph = np.linspace(ph_lo, ph_hi, 600)
 
-    charges = charges or {}
     # Does any compound actually have a pKa? That decides the layout, because the
     # explanatory note needs its own strip of figure under the axes - drawn inside
     # them it would sit on top of a curve and hide it.
     has_pka = False
     for n in names:
-        row = prop_df[prop_df["molecule"] == n]
-        if len(row) and (props.parse_pka_list(row["pKa_acidic"].iloc[0])
-                         or props.parse_pka_list(row["pKa_basic"].iloc[0])):
+        acidic, basic, _, _ = _ionization(ctx, n)
+        if acidic or basic:
             has_pka = True
             break
 
@@ -100,17 +114,12 @@ def build(cfg: dict, mols: dict, prop_df: pd.DataFrame,
     for j, n in enumerate(names):
         ax = fig.add_subplot(gs[0, j])
         ax.set_axis_off()
-        row = prop_df[prop_df["molecule"] == n]
-        acidic = props.parse_pka_list(row["pKa_acidic"].iloc[0]) if len(row) else []
-        basic = props.parse_pka_list(row["pKa_basic"].iloc[0]) if len(row) else []
+        acidic, basic, src, perm = _ionization(ctx, n)
         any_pka = any_pka or bool(acidic or basic)
-        mol = mols.get(n)
-        if mol is not None:
-            ax.imshow(_annotated_2d(mol, acidic, basic))
-        q = int(charges.get(n, 0))
-        src = str(row["pKa_source"].iloc[0]) if len(row) and "pKa_source" in row else ""
-        perm = int(row["permanent_charge"].iloc[0] or 0) if (
-            len(row) and "permanent_charge" in row) else 0
+        compound = ctx.compound(n)
+        if compound is not None:
+            ax.imshow(_annotated_2d(compound.mol, acidic, basic))
+        q = int(compound.charge) if compound is not None else 0
         txt = []
         if acidic:
             txt.append("acidic p$K_a$ " + ", ".join(f"{v:.1f}" for v in acidic))
@@ -129,13 +138,13 @@ def build(cfg: dict, mols: dict, prop_df: pd.DataFrame,
             sub = f"formal charge {q:+d}"
         else:
             sub = ""
-        ax.set_title(n + (f"\n{sub}" if sub else ""), fontsize=9,
-                     linespacing=1.35)
+        ax.set_title(n + (f"\n{sub}" if sub else ""), fontsize=9, linespacing=1.35)
         if txt:
             colour = "#4A4A4A" if src == "csv" else "#2F6FA8"
             line = "   ".join(txt) + ("   (predicted)" if src == "predicted" else "")
             caption(ax, line, size=7, color=colour)
-            predicted_names.add(n) if src == "predicted" else None
+            if src == "predicted":
+                predicted_names.add(n)
         elif src == "predicted":
             # A real, checkable statement now: the model looked and found nothing that
             # ionizes between pH 0 and 14. Carbazole and its ethers are genuinely in
@@ -151,19 +160,15 @@ def build(cfg: dict, mols: dict, prop_df: pd.DataFrame,
     qmin, qmax = 0.0, 0.0
     dashed_any = False
     for i, n in enumerate(names):
-        row = prop_df[prop_df["molecule"] == n]
-        acidic = props.parse_pka_list(row["pKa_acidic"].iloc[0]) if len(row) else []
-        basic = props.parse_pka_list(row["pKa_basic"].iloc[0]) if len(row) else []
+        acidic, basic, src_n, perm = _ionization(ctx, n)
+        compound = ctx.compound(n)
         # Baseline: the charge no pH can remove. For a compound drawn in its protonated
         # form that is zero - the +1 is already described by the basic pKa, and adding the
         # input's formal charge on top would double-count it.
-        rowp = prop_df[prop_df["molecule"] == n]
-        src_n = str(rowp["pKa_source"].iloc[0]) if (
-            len(rowp) and "pKa_source" in rowp) else ""
-        if src_n in ("predicted", "csv") and "permanent_charge" in rowp:
-            base_q = int(rowp["permanent_charge"].iloc[0] or 0)
+        if src_n in ("predicted", "csv"):
+            base_q = perm
         else:
-            base_q = int(charges.get(n, 0))
+            base_q = int(compound.charge) if compound is not None else 0
         qcurve = props.net_charge(ph, acidic, basic, base_q)
         style = "-" if (acidic or basic or base_q) else "--"
         dashed_any = dashed_any or style == "--"
@@ -204,7 +209,7 @@ def build(cfg: dict, mols: dict, prop_df: pd.DataFrame,
         fig.text(0.5, 0.025,
                  "No p$K_a$ values supplied, so no ionization is modelled: each compound is "
                  "drawn flat (dashed)\nat the formal charge of the structure you provided. "
-                 "Add pKa_acidic / pKa_basic to\n" + str(cfg["figures"]["properties_csv"])
+                 "Add pKa_acidic / pKa_basic to\n" + str(ctx.param("figures.properties_csv"))
                  + " to get real speciation curves.",
                  ha="center", va="bottom", fontsize=8, color="#C77800",
                  bbox={"boxstyle": "round,pad=0.4", "fc": "#FFF6E5", "ec": "#C77800", "lw": 0.7})
@@ -219,8 +224,9 @@ def build(cfg: dict, mols: dict, prop_df: pd.DataFrame,
                  "$\\pm$1 log unit) - supply measured values in the properties CSV to "
                  "override", ha="center", va="bottom", fontsize=7, color="#2F6FA8")
 
-    panel_letter(fig.axes[0], "A", cfg["figures"]["panel_label_style"], dx=-0.10, dy=1.02)
-    panel_letter(axb, "B", cfg["figures"]["panel_label_style"], dx=-0.055, dy=1.02)
+    label_style = ctx.param("figures.panel_label_style")
+    panel_letter(fig.axes[0], "A", label_style, dx=-0.10, dy=1.02)
+    panel_letter(axb, "B", label_style, dx=-0.055, dy=1.02)
     fig.suptitle("Acid\u2013base behaviour of the derivatives", fontsize=9.5,
                  x=0.08, y=0.995, ha="left")
-    return _save(cfg, fig, "figure12")
+    return ctx.save(fig, "figure12")
