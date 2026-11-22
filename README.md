@@ -60,6 +60,38 @@ does, how to choose it and what it costs. Enter keeps the value shown.
 Plus `descriptors.csv` — every number behind the figures, with a `warnings` column — and
 `manifest.json`, which `dft verify` checks against the files on disk.
 
+## What the figures look like
+
+Erlotinib and sorafenib, straight from their PubChem conformer SDFs, at
+r2SCAN-3c/def2-TZVP in SMD water. Nothing was edited afterwards; every number on these
+panels was parsed from the ORCA outputs, and the footnote carries the dftfig version and
+a hash of the settings that produced them.
+
+![Optimized geometries, frontier orbitals and the electrostatic potential of erlotinib and sorafenib](docs/assets/example_frontier_orbitals.png)
+
+Geometry with the imaginary-frequency check, HOMO and LUMO with the gap
+(3.159 and 3.307 eV), and V(r) on the 0.0004 a.u. density isosurface. The colour scale is
+measured from the surfaces themselves and shared by both molecules, so the two panels can
+be compared.
+
+![Ionizable centres and net charge against pH](docs/assets/example_speciation.png)
+
+Hydrogen-bond donors and acceptors marked on the 2D structure, the predicted pKa on the
+site it belongs to, and net charge across pH 0–14.
+
+![Crippen lipophilicity painted on the molecular surface](docs/assets/example_lipophilicity.png)
+
+Per-atom logP contributions on the molecular surface, with TPSA and clogP beneath each.
+
+![CNS MPO space and predicted sites of metabolism](docs/assets/example_mpo_metabolism.png)
+
+logD against TPSA inside the CNS MPO desirable box, bubble area scaled by predicted
+permeability, and the most labile position from the radical Fukui index.
+
+The panels here are labelled with the SDF file names, which is what you get from a
+PubChem download. `figures.labels` maps those to anything you like — the run directories
+keep their own names, so renaming a compound does not recompute anything.
+
 ## Commands
 
 ```
