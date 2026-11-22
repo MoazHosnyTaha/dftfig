@@ -949,5 +949,39 @@ Pharmacy, Sinai University — Kantara Branch, Ismailia, Egypt.
 <moaz.hassanein@su.edu.eg> · <moaz.hassanein1@gmail.com> ·
 [ORCID 0009-0001-1389-9305](https://orcid.org/0009-0001-1389-9305)
 
-If you use dftfig in published work, please cite it — see `CITATION.cff`, which GitHub
-renders as a ready-made citation in the sidebar.
+### Citing dftfig
+
+If dftfig produced a figure or a number in your work, please cite it. Copy whichever form
+your journal wants:
+
+**BibTeX**
+
+```bibtex
+@software{hassanein_dftfig_2026,
+  author  = {Hassanein, Moaz H. T.},
+  title   = {{dftfig}: an automated ORCA DFT and figure pipeline for molecular structures},
+  version = {0.6.0},
+  year    = {2026},
+  url     = {https://github.com/MoazHosnyTaha/dftfig},
+  note    = {ORCID 0009-0001-1389-9305}
+}
+```
+
+**Plain text (author–date)**
+
+> Hassanein, M. H. T. (2026). *dftfig: an automated ORCA DFT and figure pipeline for
+> molecular structures* (version 0.6.0) [Computer software].
+> https://github.com/MoazHosnyTaha/dftfig
+
+Replace the version with the one you actually ran — `dft --version` prints it, and it is
+also written into `descriptors.csv` and onto the figures themselves, so you can recover it
+from an old run. GitHub's **Cite this repository** button in the sidebar generates the same
+thing from `CITATION.cff`.
+
+**Also cite what did the work.** dftfig orchestrates other people's software and does not
+compute anything itself, so a methods section that names only dftfig is incomplete. At
+minimum cite **ORCA** (the version in your `descriptors.csv`), **RDKit**, and **PyMOL** if
+you show the 3D panels. §11 lists what else the caption needs.
+
+*There is no DOI yet.* One will be minted when the first archived release is deposited; if
+you need a citable DOI before then, open an issue and it can be brought forward.
