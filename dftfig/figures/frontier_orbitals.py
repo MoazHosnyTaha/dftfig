@@ -13,7 +13,8 @@ import numpy as np
 import pandas as pd
 from matplotlib.gridspec import GridSpec
 
-from ..figstyle import band_letter, cell_caption, pad_to_common_aspect, show_image
+from ..figstyle import (band_letter, cell_caption, footnote, footnote_step,
+                        pad_to_common_aspect, show_image, shrink_to_width, wrap_fields)
 from ..figureapi import REQ_CUBES, REQ_DESCRIPTORS, REQ_RENDERING, FigureContext
 from ..theme import warn
 
@@ -97,10 +98,26 @@ def build(ctx: FigureContext) -> list:
 
     ncol = len(names)
     fig = plt.figure(figsize=(2.0 * ncol + 0.9, 8.2))
+
+    # The method footnote wraps to the figure width, and with few molecules that is
+    # narrow enough to need a second line. Measure the wrap now: the lines live in the
+    # bottom margin, and a margin sized for one line would put the second through the
+    # colour-bar label.
+    mep_note = ("scaled per panel" if mode == "per_panel"
+                else f"range {vrange[0]:+.3f} to {vrange[1]:+.3f} a.u., shared")
+    method_fields = [
+        ctx.level_of_theory(),
+        f"orbital isosurface $\\pm${ctx.param('render.orbital_isovalue')} a.u.",
+        f"density isosurface {ctx.param('render.density_isovalue')} a.u.",
+        f"MEP {mep_note}",
+    ]
+    n_lines = len(wrap_fields(fig, method_fields, size=6.5))
+    bottom = 0.075 + (n_lines - 1) * footnote_step(fig, 6.5)
+
     gs = GridSpec(5, ncol, figure=fig,
                   height_ratios=[1.05, 1.0, 1.0, 1.15, 0.085],
                   hspace=0.16, wspace=0.03,
-                  left=0.055, right=0.985, top=0.945, bottom=0.075)
+                  left=0.055, right=0.985, top=0.945, bottom=bottom)
     label_style = ctx.param("figures.panel_label_style")
 
     # Row A - optimized geometries, flagged if they are not true minima
@@ -188,18 +205,12 @@ def build(ctx: FigureContext) -> list:
     band_letter(fig, "B", 0.755, label_style)
     band_letter(fig, "C", 0.330, label_style)
 
-    fig.suptitle(
+    title = fig.suptitle(
         f"Optimized geometry, frontier orbitals and electrostatic potential in "
         f"{solvent} ($\\epsilon$ = {ctx.dielectric():g})",
         fontsize=9.5, y=0.985, x=0.055, ha="left")
-    mep_note = ("scaled per panel" if mode == "per_panel"
-                else f"range {vrange[0]:+.3f} to {vrange[1]:+.3f} a.u., shared")
-    fig.text(0.055, 0.021,
-             f"{ctx.level_of_theory()}   |   orbital isosurface "
-             f"$\\pm${ctx.param('render.orbital_isovalue')} a.u."
-             f"   |   density isosurface {ctx.param('render.density_isovalue')} a.u."
-             f"   |   MEP {mep_note}",
-             fontsize=6.5, ha="left", va="bottom", color="#707070")
+    shrink_to_width(fig, title)
+    footnote(fig, method_fields, x=0.055, y=0.021, size=6.5, color="#707070")
     # Provenance on its own line rather than appended to the method line: that line is
     # already near the figure width at print size, and the two identifiers below are what
     # a reader needs to find the run - the config hash matches the config_sha column in

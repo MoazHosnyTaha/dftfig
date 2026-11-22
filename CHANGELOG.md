@@ -6,6 +6,18 @@ and this project uses [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- The frontier_orbitals figure is now as wide as its panels need, instead of as wide as
+  its longest line of text. The canvas already scaled with the molecule count, but the
+  style saves with `bbox_inches="tight"`, which grows the output until it contains every
+  artist - so the method footnote and the title, both fixed-length, set the width
+  whenever they were longer than the panels. Two molecules came out a third empty on the
+  right; four happened to look right because the panels were wider than the text. The
+  footnote now wraps to the figure width and the title shrinks to fit, and the bottom
+  margin is sized from the wrap so the extra lines do not land on the colour-bar label.
+  On two molecules the file goes from 7.29 to 4.98 inches wide; at four and above
+  nothing changes.
+
 ### Added
 - `figures.labels` maps a molecule name to the name the figures should print. Molecule
   names double as directory names and ORCA file stems, so a PubChem download arrives as

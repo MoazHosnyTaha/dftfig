@@ -175,6 +175,82 @@ def cell_caption(fig, ax, text: str, size: int | None = None, color: str = GREY,
                     fontsize=size or SIZES[1], color=color, bbox=bbox)
 
 
+def footnote_step(fig, size: float) -> float:
+    """Line spacing for :func:`footnote`, in figure fraction."""
+    return size * 1.6 / (fig.get_figheight() * 72.0)
+
+
+def wrap_fields(fig, fields, *, size: float, left: float = 0.055,
+                right: float = 0.985, sep: str = "   |   ") -> list[str]:
+    """Pack ``fields`` into the fewest lines that fit the figure width.
+
+    Separate from :func:`footnote` because a caller has to know how many lines the
+    footnote will take *before* it fixes the layout: the lines occupy the bottom
+    margin, and a margin sized for one line puts the second through the colour-bar
+    label.
+    """
+    renderer = fig.canvas.get_renderer()
+    avail = right - left
+
+    def too_wide(text: str) -> bool:
+        probe = fig.text(0, 0, text, fontsize=size)
+        w = probe.get_window_extent(renderer=renderer).width / fig.bbox.width
+        probe.remove()
+        return w > avail
+
+    lines: list[str] = []
+    current = ""
+    for field in fields:
+        candidate = f"{current}{sep}{field}" if current else str(field)
+        if current and too_wide(candidate):
+            lines.append(current)
+            current = str(field)
+        else:
+            current = candidate
+    if current:
+        lines.append(current)
+    return lines
+
+
+def shrink_to_width(fig, artist, *, left: float = 0.055, right: float = 0.985,
+                    min_size: float = 7.0) -> float:
+    """Reduce a text artist's size until it fits the figure width. Returns that size.
+
+    Same reason as :func:`footnote`: with ``bbox_inches="tight"`` an over-wide title
+    does not overflow, it silently widens the saved figure, and the panels then sit in
+    a canvas sized by a sentence rather than by the data.
+    """
+    renderer = fig.canvas.get_renderer()
+    avail = (right - left) * fig.bbox.width
+    have = artist.get_window_extent(renderer=renderer).width
+    size = artist.get_fontsize()
+    if have > avail:
+        size = max(min_size, size * avail / have)
+        artist.set_fontsize(size)
+    return size
+
+
+def footnote(fig, fields, *, x: float = 0.055, y: float = 0.021, size: float = 6.5,
+             color: str = GREY, right: float = 0.985, sep: str = "   |   ") -> float:
+    """Draw a field-separated footnote, wrapped to the width of the figure.
+
+    A long single-line footnote silently decides how wide the saved file is: the style
+    saves with ``bbox_inches="tight"``, which grows the output until it contains every
+    artist, so a method line wider than the panels pads the figure with empty space on
+    the right. How much depends on how many molecules there are, which is why the same
+    footnote looks right on four and leaves a third of the canvas blank on two.
+
+    Fields are packed into as many lines as fit and drawn upward from ``y``, so the
+    anchor keeps its meaning whatever the wrap produces. Returns the topmost line's y.
+    """
+    lines = wrap_fields(fig, fields, size=size, left=x, right=right, sep=sep)
+    step = footnote_step(fig, size)
+    for i, line in enumerate(reversed(lines)):
+        fig.text(x, y + i * step, line, fontsize=size, ha="left", va="bottom",
+                 color=color)
+    return y + (len(lines) - 1) * step
+
+
 def trim_white(path, pad: int = 8):
     """Crop uniform white/transparent margins from a rendered panel."""
     import numpy as np
