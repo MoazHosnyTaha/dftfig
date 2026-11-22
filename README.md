@@ -20,16 +20,60 @@ that nobody records, and that nobody can reproduce afterwards.
 
 ## Install
 
+Three pieces: the Python package, PyMOL for the 3D panels, and ORCA itself. The first two
+come from one conda environment; ORCA you install separately.
+
+**1. Clone the repository**
+
 ```bash
-conda env create -f environment.yml && conda activate dftfig
-pip install -e .
-dft doctor          # confirms ORCA, PyMOL, cores and packages
+git clone https://github.com/MoazHosnyTaha/dftfig.git
+cd dftfig
 ```
 
-`pip install dftfig` works too, but PyMOL is conda-only — without it the 3D panels are
-skipped rather than failing. **ORCA is not included**: install it yourself (free for
-academic use) and dftfig will find it. Linux and macOS are tested; see
-[docs/usage.md](docs/usage.md#installing) for details.
+**2. Create the environment.** conda is recommended because it is the only way to get the
+open-source PyMOL build:
+
+```bash
+conda env create -f environment.yml   # Python 3.11, RDKit, PyMOL, matplotlib, cclib
+conda activate dftfig
+pip install -e .                      # puts the `dft` command on your PATH
+```
+
+`mamba env create -f environment.yml` does the same thing faster. Python 3.10 or newer is
+required.
+
+If you would rather use an environment you already have, `pip install dftfig` brings RDKit
+and everything else — but not PyMOL, whose open-source build is not on PyPI. Without it
+the 3D panels of `frontier_orbitals` and `lipophilicity` are skipped with a message rather
+than failing; add it later with `conda install -c conda-forge pymol-open-source`.
+
+**3. Install ORCA.** It is not bundled and is not a Python dependency. ORCA is free for
+academic use: register and download 6.x from the
+[ORCA forum](https://orcaforum.kofo.mpg.de), then unpack it anywhere you like. dftfig
+finds it by itself — it checks `$ORCA_PATH`, then your `PATH`, then the usual locations
+(`~/orca*`, `/opt/orca*`, `/usr/local/orca*`, `/share/apps/orca*`) and remembers the
+result in `~/.config/dftfig/paths.yaml`. A candidate only counts if `orca_plot` and
+`orca_vpot` sit beside it, because on most Linux desktops `/usr/bin/orca` is the GNOME
+**screen reader** and running that instead fails in a way that makes no sense. Set
+`execution.orca_path` if you keep several ORCA versions.
+
+**4. Check what your machine provides**
+
+```bash
+dft doctor
+```
+
+```
+  OK  ORCA: /opt/orca_6_1_0/orca
+      version 6.1.0
+  OK  PyMOL: /home/you/miniconda3/envs/dftfig/bin/pymol
+  OK  python packages: all present
+```
+
+Linux and macOS are tested. Windows is expected to work and is not in the tested matrix:
+the arrow-key menus need termios, so there every question falls back automatically to a
+numbered prompt that takes the same answers. More detail in
+[docs/usage.md](docs/usage.md#installing).
 
 ## Run
 
