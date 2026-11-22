@@ -6,6 +6,19 @@ and this project uses [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.6.0] - 2026-11-22
+
+### Changed
+- **The built-in figures are named after their content, not after figure numbers.**
+  `fig2` is now `frontier_orbitals`, `fig12` is `speciation`, `fig13` is `lipophilicity`
+  and `fig14` is `mpo_metabolism`; the output files follow the same names. The old names
+  came from the manuscript this pipeline was first written to reproduce and mean nothing
+  to anyone else. A configuration using them still works: the names are resolved on load
+  and `dft validate` rewrites them, saying what it changed.
+
+### Added
+- A banner for the README, composed from the pipeline's own rendered output.
+
 ## [0.5.0] - 2026-11-22
 
 First public release.

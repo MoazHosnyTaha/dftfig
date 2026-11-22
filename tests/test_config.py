@@ -174,7 +174,7 @@ def test_that_dependency_is_a_validation_error_if_not_repaired(make_cfg, stage):
 
 
 def test_figure_2_turns_on_the_cubes_and_a_render_engine(make_cfg, four_cores):
-    cfg = make_cfg(**{"figures.which": ["fig2"], "render.engine": "none",
+    cfg = make_cfg(**{"figures.which": ["frontier_orbitals"], "render.engine": "none",
                       "execution.nprocs": 4})
     cfg["cubes"]["enabled"] = False
     C.repair(cfg)

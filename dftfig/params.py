@@ -1030,26 +1030,33 @@ G_FIGURES = Group(
     "figures", "Figure assembly", "Which figures to build and how they are typeset.",
     [
         Param(
-            "figures.which", "Figures to produce", "multichoice", ["fig2", "fig12", "fig13", "fig14"],
+            "figures.which", "Figures to produce", "multichoice",
+            ["frontier_orbitals", "speciation", "lipophilicity", "mpo_metabolism"],
             help="Selects which figures are assembled. The four below are built in; any "
                  "plugin discovered in figures.plugin_dir or registered by an installed "
                  "package can be named here too.",
-            guidance="fig2 needs the full DFT chain. fig12, fig13 and fig14 need only the optimized "
-                     "geometries plus the properties CSV, so they are quick to iterate on once the DFT "
-                     "has run once.",
+            guidance="frontier_orbitals needs the full DFT chain: cubes and 3D rendering. The "
+                     "other three need only the optimized geometries plus the derived "
+                     "properties, so they are quick to iterate on once the DFT has run once. "
+                     "The older names fig2 / fig12 / fig13 / fig14 still work and are migrated "
+                     "automatically.",
             choices=[
-                Choice("fig2", "Figure 2 - geometry / HOMO-LUMO / MEP",
-                       "Three rows: optimized structures, frontier orbitals with the gap, MEP surfaces. "
-                       "Requires DFT, cubes and rendering.", (TAG_PAPER, TAG_RECOMMENDED, TAG_FAST)),
-                Choice("fig12", "Figure 12 - pKa and net charge vs pH",
-                       "Acid-base analysis: annotated 2D structures plus a speciation curve. Needs pKa "
-                       "values in the properties CSV.", (TAG_PAPER, TAG_RECOMMENDED)),
-                Choice("fig13", "Figure 13 - lipophilicity surfaces",
-                       "Molecular lipophilicity potential painted on the molecular surface, with TPSA. "
-                       "Requires optimized geometries and rendering.", (TAG_PAPER, TAG_RECOMMENDED)),
-                Choice("fig14", "Figure 14 - CNS MPO and metabolism maps",
-                       "logD/TPSA bubble plot with MPO scoring, plus site-of-metabolism sensitivity maps. "
-                       "Needs the properties and SOM CSVs.", (TAG_PAPER, TAG_RECOMMENDED)),
+                Choice("frontier_orbitals", "Geometry, frontier orbitals and MEP",
+                       "Three rows: optimized structures with the minimum check, HOMO and LUMO "
+                       "with the gap, and the electrostatic potential mapped on the electron "
+                       "density. Requires DFT, cubes and rendering.",
+                       (TAG_RECOMMENDED, TAG_FAST)),
+                Choice("speciation", "Acid-base speciation vs pH",
+                       "Annotated 2D structures showing every ionizable centre, plus net "
+                       "molecular charge across pH 0-14. pKa is predicted from structure unless "
+                       "you supply measured values.", (TAG_RECOMMENDED,)),
+                Choice("lipophilicity", "Lipophilicity surfaces",
+                       "Per-atom Crippen lipophilicity painted on the molecular surface, with "
+                       "TPSA and clogP. Requires optimized geometries and rendering.",
+                       (TAG_RECOMMENDED,)),
+                Choice("mpo_metabolism", "CNS MPO space and metabolism maps",
+                       "logD against TPSA with the CNS MPO score, plus site-of-metabolism maps "
+                       "weighted by the radical Fukui index.", (TAG_RECOMMENDED,)),
             ],
         ),
         Param(

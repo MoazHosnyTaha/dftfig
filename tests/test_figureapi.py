@@ -109,7 +109,7 @@ def test_descriptor_and_property_access(ctx):
 def test_rows_hold_python_scalars_not_numpy_ones(ctx):
     """Regression: `df.iloc[0]["is_minimum"]` is numpy.bool_, and `value is True` fails.
 
-    Figure 2 decides whether to print "minimum confirmed" with exactly that test, and the
+    the frontier-orbitals figure decides whether to print "minimum confirmed" with exactly that test, and the
     caption silently disappeared when the row came from .iloc instead of .iterrows.
     """
     row = ctx.descriptor_row("ANIL")
@@ -186,16 +186,16 @@ def test_a_figure_named_in_the_config_but_not_installed_is_reported(project, plu
     from dftfig import __main__ as cli
     assert cli.stage_figures(cfg, specs, desc) == []
     out = capsys.readouterr().out
-    assert "does_not_exist" in out and "fig2" in out          # lists what IS available
+    assert "does_not_exist" in out and "frontier_orbitals" in out          # lists what IS available
 
 
 # --------------------------------------------------------------------------- discovery
 def test_the_four_built_ins_are_discovered_with_their_declarations():
     found = figureapi.available()
-    assert {"fig2", "fig12", "fig13", "fig14"} <= set(found)
-    assert found["fig2"].requires == ("rendering", "cubes", "descriptors")
-    assert found["fig13"].requires == ("rendering",)
-    assert all(found[n].builtin and found[n].title for n in ("fig2", "fig12"))
+    assert {"frontier_orbitals", "speciation", "lipophilicity", "mpo_metabolism"} <= set(found)
+    assert found["frontier_orbitals"].requires == ("rendering", "cubes", "descriptors")
+    assert found["lipophilicity"].requires == ("rendering",)
+    assert all(found[n].builtin and found[n].title for n in ("frontier_orbitals", "speciation"))
 
 
 def test_a_plain_py_file_in_the_project_directory_is_discovered(project, plugin_dir):
@@ -210,8 +210,8 @@ def test_a_plain_py_file_in_the_project_directory_is_discovered(project, plugin_
 
 def test_a_project_file_overrides_a_built_in_of_the_same_name(project, plugin_dir):
     cfg = project[0]
-    (plugin_dir / "mine.py").write_text(TOY_PLUGIN.replace('"toy"', '"fig2"'))
-    assert not figureapi.available(cfg)["fig2"].builtin
+    (plugin_dir / "mine.py").write_text(TOY_PLUGIN.replace('"toy"', '"frontier_orbitals"'))
+    assert not figureapi.available(cfg)["frontier_orbitals"].builtin
 
 
 def test_an_installed_package_is_discovered_through_the_entry_point_group(monkeypatch,
@@ -238,7 +238,7 @@ def test_an_installed_package_is_discovered_through_the_entry_point_group(monkey
     found = figureapi.available()
     assert "packaged" in found
     assert found["packaged"].origin == "package 'thirdparty'"
-    assert "fig2" in found                        # the built-ins are still there
+    assert "frontier_orbitals" in found                        # the built-ins are still there
 
 
 def test_a_broken_plugin_is_reported_and_skipped(project, plugin_dir, capsys):
@@ -273,7 +273,7 @@ def test_an_unknown_requirement_name_is_refused(project, plugin_dir, capsys):
 
 
 def test_load_names_what_is_available_when_asked_for_something_that_is_not():
-    with pytest.raises(figureapi.FigureError, match="fig2"):
+    with pytest.raises(figureapi.FigureError, match="frontier_orbitals"):
         figureapi.load("nonexistent")
 
 
@@ -282,10 +282,10 @@ def test_a_discovered_plugin_is_a_legal_value_for_figures_which(project, plugin_
     from dftfig import config as C
     cfg = project[0]
     (plugin_dir / "toy.py").write_text(TOY_PLUGIN)
-    cfg["figures"]["which"] = ["fig12", "toy"]
+    cfg["figures"]["which"] = ["speciation", "toy"]
     C.validate(cfg)                                     # raises ConfigError on failure
 
-    cfg["figures"]["which"] = ["fig12", "not_a_figure"]
+    cfg["figures"]["which"] = ["speciation", "not_a_figure"]
     with pytest.raises(C.ConfigError):
         C.validate(cfg)
 

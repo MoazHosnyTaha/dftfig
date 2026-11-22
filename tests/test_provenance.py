@@ -87,7 +87,7 @@ def test_keyword_lines_prefer_the_output_over_the_input(cfg):
     ("render", "width", 2400),
     ("render", "orbital_isovalue", 0.05),
     ("figures", "dpi", 600),
-    ("figures", "which", ["fig2"]),
+    ("figures", "which", ["frontier_orbitals"]),
 ])
 def test_config_sha_ignores_what_cannot_change_a_number(cfg, section, key, value):
     """The whole point of the hash: same chemistry on a laptop and a cluster hashes alike."""
@@ -146,7 +146,7 @@ def _populate(cfg) -> Path:
     (work / "descriptors.csv").write_text("molecule,medium\nANIL,water\n")
     figs = work / "figures"
     figs.mkdir()
-    (figs / "figure2.png").write_bytes(b"\x89PNG not really")
+    (figs / "frontier_orbitals.png").write_bytes(b"\x89PNG not really")
     return work
 
 
@@ -165,7 +165,7 @@ def test_manifest_round_trips_through_verify(cfg):
     listed = {e["path"] for e in man["files"]}
     assert "ANIL/water/ANIL_water_sp.out" in listed
     assert "ANIL/water/homo.cube" in listed
-    assert "figures/figure2.png" in listed
+    assert "figures/frontier_orbitals.png" in listed
     assert "descriptors.csv" in listed
     assert provenance.MANIFEST_NAME not in listed   # it cannot contain its own hash
     for e in man["files"]:
@@ -191,20 +191,20 @@ def test_verify_detects_an_altered_file(cfg):
 def test_verify_detects_a_missing_file(cfg):
     work = _populate(cfg)
     provenance.write(cfg)
-    (work / "figures" / "figure2.png").unlink()
+    (work / "figures" / "frontier_orbitals.png").unlink()
 
     r = provenance.verify(cfg)
-    assert r["missing"] == ["figures/figure2.png"]
+    assert r["missing"] == ["figures/frontier_orbitals.png"]
     assert provenance.verify_report(cfg) != 0
 
 
 def test_verify_detects_a_file_nobody_recorded(cfg):
     work = _populate(cfg)
     provenance.write(cfg)
-    (work / "figures" / "figure13.png").write_bytes(b"added afterwards")
+    (work / "figures" / "lipophilicity.png").write_bytes(b"added afterwards")
 
     r = provenance.verify(cfg)
-    assert r["unlisted"] == ["figures/figure13.png"]
+    assert r["unlisted"] == ["figures/lipophilicity.png"]
     assert (r["missing"], r["changed"]) == ([], [])
     assert provenance.verify_report(cfg) != 0
 

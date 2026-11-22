@@ -119,6 +119,20 @@ def repair(cfg: dict) -> list[str]:
              f"({_os.cpu_count()} hardware threads), and ORCA aborts at startup if asked "
              f"for more")
 
+    # A config written before the figures were renamed still names them by the paper's
+    # figure numbers. Migrate rather than reject: the user did nothing wrong.
+    from .figureapi import LEGACY_NAMES
+    which = list(cfg["figures"]["which"])
+    if any(w in LEGACY_NAMES for w in which):
+        new = [LEGACY_NAMES.get(w, w) for w in which]
+        seen, deduped = set(), []
+        for w in new:
+            if w not in seen:
+                seen.add(w); deduped.append(w)
+        set_("figures", "which", deduped,
+             "the built-in figures are now named after their content, not the figure "
+             "numbers of the paper this pipeline was first written to reproduce")
+
     func = str(cfg["theory"]["functional"])
     if cfg["theory"]["dispersion"] != "none" and (
             "D3BJ" in func or "D4" in func or "3c" in func):
@@ -148,7 +162,7 @@ def repair(cfg: dict) -> list[str]:
         set_("property", "enabled", True,
              "Fukui functions and cube files are produced by the property single point")
 
-    if "fig2" in cfg["figures"]["which"]:
+    if "frontier_orbitals" in cfg["figures"]["which"]:
         if not cfg["cubes"]["enabled"]:
             set_("cubes", "enabled", True, "Figure 2 panels B and C are built from cube files")
         if cfg["render"]["engine"] == "none":
@@ -239,10 +253,11 @@ def validate(cfg: dict) -> None:
         errs.append("fukui.enabled requires property.enabled (the neutral reference single point).")
     if cfg["cubes"]["enabled"] and not cfg["property"]["enabled"]:
         errs.append("cubes.enabled requires property.enabled (cubes are written by the property job).")
-    if "fig2" in cfg["figures"]["which"] and not cfg["cubes"]["enabled"]:
-        errs.append("figures 'fig2' needs cubes.enabled (panels B and C are built from cube files).")
-    if "fig2" in cfg["figures"]["which"] and cfg["render"]["engine"] == "none":
-        errs.append("figures 'fig2' needs a render.engine other than 'none'.")
+    if "frontier_orbitals" in cfg["figures"]["which"] and not cfg["cubes"]["enabled"]:
+        errs.append("figures 'frontier_orbitals' needs cubes.enabled (panels B and C are "
+                    "built from cube files).")
+    if "frontier_orbitals" in cfg["figures"]["which"] and cfg["render"]["engine"] == "none":
+        errs.append("figures 'frontier_orbitals' needs a render.engine other than 'none'.")
     if cfg["property"]["population"] == "Mulliken" and "+" in str(cfg["property"]["basis_sp"]):
         errs.append(
             "property.population = 'Mulliken' with a diffuse ('+') basis gives unreliable, "

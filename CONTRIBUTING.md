@@ -61,9 +61,9 @@ context: no ORCA output, no path arithmetic, no `cfg["execution"]["work_dir"]`.
 
 Start from [`docs/writing-a-figure.md`](docs/writing-a-figure.md), which builds one from
 scratch, and from `examples/fukui_bars/` which is the same figure ready to run. The four
-built-ins under `dftfig/figures/` are the reference implementations: fig12 for a figure
-that needs only the structures and the property table, fig13 for one colour scale shared
-across rendered panels, fig2 for the full case.
+built-ins under `dftfig/figures/` are the reference implementations: speciation for a figure
+that needs only the structures and the property table, lipophilicity for one colour scale shared
+across rendered panels, frontier_orbitals for the full case.
 
 You do not need a pull request to use your own figure - drop it in `./dft_figures` or
 ship it in a package declaring the `dftfig.figures` entry-point group. Send a pull

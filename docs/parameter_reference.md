@@ -710,18 +710,18 @@ Comma-separated 1-based atom indices to label in the geometry panel, e.g. '3,4,9
 *Which figures to build and how they are typeset.*
 
 ### `figures.which`
-**Figures to produce** · type `multichoice` · default `['fig2', 'fig12', 'fig13', 'fig14']`
+**Figures to produce** · type `multichoice` · default `['frontier_orbitals', 'speciation', 'lipophilicity', 'mpo_metabolism']`
 
 Selects which figures are assembled. The four below are built in; any plugin discovered in figures.plugin_dir or registered by an installed package can be named here too.
 
-**How to choose.** fig2 needs the full DFT chain. fig12, fig13 and fig14 need only the optimized geometries plus the properties CSV, so they are quick to iterate on once the DFT has run once.
+**How to choose.** frontier_orbitals needs the full DFT chain: cubes and 3D rendering. The other three need only the optimized geometries plus the derived properties, so they are quick to iterate on once the DFT has run once. The older names fig2 / fig12 / fig13 / fig14 still work and are migrated automatically.
 
 | value | name | what it means | preset |
 |---|---|---|---|
-| `fig2` | Figure 2 - geometry / HOMO-LUMO / MEP | Three rows: optimized structures, frontier orbitals with the gap, MEP surfaces. Requires DFT, cubes and rendering. | `paper` `recommended` `fast` |
-| `fig12` | Figure 12 - pKa and net charge vs pH | Acid-base analysis: annotated 2D structures plus a speciation curve. Needs pKa values in the properties CSV. | `paper` `recommended` |
-| `fig13` | Figure 13 - lipophilicity surfaces | Molecular lipophilicity potential painted on the molecular surface, with TPSA. Requires optimized geometries and rendering. | `paper` `recommended` |
-| `fig14` | Figure 14 - CNS MPO and metabolism maps | logD/TPSA bubble plot with MPO scoring, plus site-of-metabolism sensitivity maps. Needs the properties and SOM CSVs. | `paper` `recommended` |
+| `frontier_orbitals` | Geometry, frontier orbitals and MEP | Three rows: optimized structures with the minimum check, HOMO and LUMO with the gap, and the electrostatic potential mapped on the electron density. Requires DFT, cubes and rendering. | `recommended` `fast` |
+| `speciation` | Acid-base speciation vs pH | Annotated 2D structures showing every ionizable centre, plus net molecular charge across pH 0-14. pKa is predicted from structure unless you supply measured values. | `recommended` |
+| `lipophilicity` | Lipophilicity surfaces | Per-atom Crippen lipophilicity painted on the molecular surface, with TPSA and clogP. Requires optimized geometries and rendering. | `recommended` |
+| `mpo_metabolism` | CNS MPO space and metabolism maps | logD against TPSA with the CNS MPO score, plus site-of-metabolism maps weighted by the radical Fukui index. | `recommended` |
 
 ### `figures.plugin_dir`  *(advanced)*
 **Where your own figures live** · type `path` · default `dft_figures`

@@ -18,7 +18,7 @@ Add it to `config.yaml`:
 
 ```yaml
 figures:
-  which: [fig2, fig12, fig13, fig14, fukui_bars]
+  which: [frontier_orbitals, speciation, lipophilicity, mpo_metabolism, fukui_bars]
 ```
 
 and draw it:

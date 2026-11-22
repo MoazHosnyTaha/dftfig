@@ -19,8 +19,8 @@ from ..figstyle import caption, panel_letter
 from ..figureapi import REQ_PROPERTIES, FigureContext
 from ..theme import warn
 
-NAME = "fig14"
-TITLE = "Figure 14 - CNS MPO space and predicted sites of metabolism"
+NAME = "mpo_metabolism"
+TITLE = "CNS MPO space and predicted sites of metabolism"
 REQUIRES = (REQ_PROPERTIES,)
 
 HUES = ["#7C4DFF", "#00A5A5", "#FF8A3D", "#C2185B", "#2E7D32", "#5D4037"]
@@ -251,4 +251,4 @@ def build(ctx: FigureContext) -> list:
     panel_letter(axa, "A", ctx.param("figures.panel_label_style"), dx=-0.075, dy=1.02)
     fig.suptitle("Multiparameter optimization and predicted sites of metabolism",
                  fontsize=9.5, x=0.095, y=0.995, ha="left")
-    return ctx.save(fig, "figure14")
+    return ctx.save(fig, "mpo_metabolism")

@@ -150,7 +150,7 @@ A copy ready to run is in `examples/fukui_bars/`.
 $ dft params figures.which
   ...
   value         name                                        what it means
-* fig2          Figure 2 - geometry / HOMO-LUMO / MEP       ...
+* frontier_orbitals          the frontier-orbitals figure - geometry / HOMO-LUMO / MEP       ...
   ...
   fukui_bars    Condensed Fukui indices per heavy atom      plugin, from
                                                             dft_figures/fukui_bars.py;
@@ -169,13 +169,13 @@ a run.
 ```yaml
 # config.yaml
 figures:
-  which: [fig2, fig12, fig13, fig14, fukui_bars]
+  which: [frontier_orbitals, speciation, lipophilicity, mpo_metabolism, fukui_bars]
 ```
 
 ```console
 $ dft figures
  figures
- fig2, fig12, fig13, fig14, fukui_bars
+ frontier_orbitals, speciation, lipophilicity, mpo_metabolism, fukui_bars
   ...
   OK  fukui_bars -> runs/figures/fukui_bars.png
 ```

@@ -66,7 +66,16 @@ ENTRY_POINT_GROUP = "dftfig.figures"
 #: how the bundled launcher and the test suite run it - has none. Without this the
 #: built-ins would vanish from a checkout while continuing to work from a wheel, which is
 #: exactly the kind of difference that only shows up in somebody else's CI.
-BUILTIN_MODULES = ("fig2", "fig12", "fig13", "fig14")
+BUILTIN_MODULES = ("frontier_orbitals", "speciation", "lipophilicity",
+                   "mpo_metabolism")
+
+# The built-ins were once named after the figure numbers of the paper this
+# pipeline was first written to reproduce. Those numbers mean nothing to anyone
+# else, so the names now describe the content. A config written against the old
+# names still works: the alias is resolved here and migrated by config.repair,
+# which tells the user what it changed.
+LEGACY_NAMES = {"fig2": "frontier_orbitals", "fig12": "speciation",
+                "fig13": "lipophilicity", "fig14": "mpo_metabolism"}
 
 REQ_RENDERING = "rendering"
 REQ_CUBES = "cubes"
@@ -545,9 +554,11 @@ def available(cfg: dict | None = None) -> dict[str, FigureSpec]:
 
 
 def load(name: str, cfg: dict | None = None) -> FigureSpec:
-    """One figure by name, or :class:`FigureError` listing what is available."""
+    """Resolve a figure name to its spec, accepting the superseded names."""
+    name = LEGACY_NAMES.get(name, name)
     found = available(cfg)
     if name not in found:
-        raise FigureError(f"no figure named {name!r}; available: "
-                          f"{', '.join(sorted(found)) or '(none)'}")
+        raise FigureError(
+            f"no figure named {name!r}. Available: " + ", ".join(sorted(found))
+        )
     return found[name]

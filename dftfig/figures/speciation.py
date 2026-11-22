@@ -17,8 +17,8 @@ from .. import properties as props
 from ..figstyle import caption, panel_letter
 from ..figureapi import REQ_PROPERTIES, FigureContext
 
-NAME = "fig12"
-TITLE = "Figure 12 - pKa annotation and net charge versus pH"
+NAME = "speciation"
+TITLE = "Acid-base speciation: pKa annotation and net charge versus pH"
 REQUIRES = (REQ_PROPERTIES,)
 
 HUES = ["#7C4DFF", "#00A5A5", "#FF8A3D", "#C2185B", "#2E7D32", "#5D4037"]
@@ -229,4 +229,4 @@ def build(ctx: FigureContext) -> list:
     panel_letter(axb, "B", label_style, dx=-0.055, dy=1.02)
     fig.suptitle("Acid\u2013base behaviour of the derivatives", fontsize=9.5,
                  x=0.08, y=0.995, ha="left")
-    return ctx.save(fig, "figure12")
+    return ctx.save(fig, "speciation")

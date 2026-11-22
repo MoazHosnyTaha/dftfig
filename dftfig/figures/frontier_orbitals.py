@@ -17,8 +17,8 @@ from ..figstyle import band_letter, cell_caption, pad_to_common_aspect, show_ima
 from ..figureapi import REQ_CUBES, REQ_DESCRIPTORS, REQ_RENDERING, FigureContext
 from ..theme import warn
 
-NAME = "fig2"
-TITLE = "Figure 2 - geometry, frontier orbitals and electrostatic potential"
+NAME = "frontier_orbitals"
+TITLE = "Optimized geometry, frontier orbitals and electrostatic potential"
 REQUIRES = (REQ_RENDERING, REQ_CUBES, REQ_DESCRIPTORS)
 
 
@@ -210,4 +210,4 @@ def build(ctx: FigureContext) -> list:
              f"config {ctx.provenance['config_sha']}",
              fontsize=6.5, ha="left", va="bottom", color="#707070")
 
-    return ctx.save(fig, "figure2")
+    return ctx.save(fig, "frontier_orbitals")

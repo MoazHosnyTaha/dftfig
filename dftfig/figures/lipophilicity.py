@@ -15,8 +15,8 @@ from ..figstyle import cell_caption, pad_to_common_aspect, show_image
 from ..figureapi import REQ_RENDERING, FigureContext
 from ..theme import warn
 
-NAME = "fig13"
-TITLE = "Figure 13 - molecular lipophilicity potential surfaces"
+NAME = "lipophilicity"
+TITLE = "Molecular lipophilicity potential on the molecular surface"
 REQUIRES = (REQ_RENDERING,)
 
 
@@ -81,4 +81,4 @@ def build(ctx: FigureContext) -> list:
 
     fig.suptitle("Molecular lipophilicity potential mapped on the molecular surface",
                  fontsize=9.5, x=0.03, y=0.995, ha="left")
-    return ctx.save(fig, "figure13")
+    return ctx.save(fig, "lipophilicity")

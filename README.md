@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/banner.png" alt="dftfig - automated DFT and figure pipeline for ORCA" width="100%">
+</p>
+
 # dftfig — automated DFT and figure pipeline for ORCA
 
 [![tests](https://github.com/MoazHosnyTaha/dftfig/actions/workflows/tests.yml/badge.svg)](https://github.com/MoazHosnyTaha/dftfig/actions/workflows/tests.yml)
@@ -21,9 +25,10 @@ that nobody records, and that nobody can reproduce afterwards.
                                    minimum check      orbitals, MEP,            condensed Fukui
                                                       populations               functions, ΔSCF
                                                            |
-          Figure 2        Figure 12        Figure 13        Figure 14
-      geometry/HOMO/      pKa + net       lipophilicity    CNS MPO space +
-        LUMO/MEP         charge vs pH        surfaces      metabolism maps
+                 ┌─────────────────────┬────────────┴───────────┬──────────────────────┐
+          frontier_orbitals        speciation            lipophilicity         mpo_metabolism
+         geometry, HOMO/LUMO,     pKa and net          Crippen logP on        CNS MPO space,
+          gap, MEP surfaces      charge vs pH         the molecular surface   metabolism maps
 ```
 
 ## Structures are the only required input
@@ -79,7 +84,7 @@ pip install dftfig
 ```
 
 RDKit and everything else comes with it. PyMOL does not — the open-source build is not on
-PyPI — so the 3D panels of Figure 2 and Figure 13 are skipped with a message rather than
+PyPI — so the 3D panels of the frontier-orbitals figure and Figure 13 are skipped with a message rather than
 failing. Add it with `conda install -c conda-forge pymol-open-source` when you want them.
 
 ### Then check what your machine provides
@@ -187,7 +192,7 @@ it holds:
 | 4. Implicit solvation | CPCM or SMD, and which media | 2 |
 | 5. Property single point | the larger basis, the population scheme, Koopmans vs ΔSCF | 4 |
 | 6. Fukui functions | whether to run the N±1 points and on which geometry | 2 |
-| 7. Volumetric data | the grids Figure 2 is drawn from | 4 |
+| 7. Volumetric data | the grids the frontier-orbitals figure is drawn from | 4 |
 | 8. 3D rendering | isovalues, colours, transparency, camera | keep, or 18 |
 | 9. Figure assembly | which figures, DPI, labels, palettes, MPO variant | keep, or 17 |
 | 10. Execution | cores, memory, scratch, resume | 8 |
@@ -234,7 +239,7 @@ python -m dftfig validate -c config.yaml
 Validation catches the combinations that otherwise waste an afternoon: a functional that already
 contains dispersion with `dispersion` set as well; a reference solvent you never calculated;
 `RIJK` without a `/JK` auxiliary basis; frequencies on top of a `LooseOpt`; Mulliken populations
-with a diffuse basis; Figure 2 requested with cubes disabled.
+with a diffuse basis; the frontier-orbitals figure requested with cubes disabled.
 
 ---
 
@@ -281,7 +286,7 @@ runs/
   manifest_{opt,sp,fukui}.json      per-job status, wall time, energies
   manifest.json                     provenance: versions, settings hash, SHA-256 per file
   figures/
-    figure2.{png,pdf}  figure12.*  figure13.*  figure14.*
+    frontier_orbitals.{png,pdf}  speciation.*  lipophilicity.*  mpo_metabolism.*
     properties_resolved.csv         what the figures actually used
 ```
 
@@ -342,7 +347,7 @@ because a stale manifest is worse than none):
   "config": { "...the whole resolved configuration..." },
   "files": [
     {"path": "CCB1/water/CCB1_water_sp.out", "bytes": 1840221, "sha256": "9f86d0…"},
-    {"path": "figures/figure2.png",          "bytes":  612004, "sha256": "e3b0c4…"}
+    {"path": "figures/frontier_orbitals.png",          "bytes":  612004, "sha256": "e3b0c4…"}
   ]
 }
 ```
@@ -373,7 +378,7 @@ It re-hashes everything the manifest lists and reports three kinds of disagreeme
 It exits `0` only when everything agrees, so it can be used as a gate:
 
 ```bash
-dft verify && cp runs/figures/figure2.pdf ~/manuscript/
+dft verify && cp runs/figures/frontier_orbitals.pdf ~/manuscript/
 ```
 
 Any disagreement exits `1`; a missing manifest exits `2`. The usual cause of "changed" is honest —
@@ -687,7 +692,7 @@ warning. On a normal desktop install this does not occur; if it does, run with `
   lowest virtual orbitals of a molecule whose true electron affinity is negative are discretised
   continuum states, not valence antibonding orbitals. The HOMO–LUMO gap is then not an excitation
   energy and the Koopmans EA is meaningless. `descriptors.csv` records the warning, the terminal
-  prints it, and the gap annotation on Figure 2 turns amber and says so.
+  prints it, and the gap annotation on the frontier-orbitals figure turns amber and says so.
 * **Koopmans and ΔSCF electron affinities are compared in sign.** When they disagree, the orbital
   picture and the energy-difference picture are telling opposite stories and only ΔSCF is usable.
 * **Formal charge is carried into Figure 12.** A permanently charged compound is plotted at its own
@@ -717,7 +722,7 @@ The successful geometry becomes `<name>_<solvent>_opt.xyz`, which is what every 
 stage reads; the original saddle-point files are kept as `<name>_<solvent>_opt_saddle.*`
 and each restart as `..._r1.*`, so nothing is overwritten silently. The whole history goes
 to `runs/saddle_history.csv`, `descriptors.csv` gains a `saddle_restarts` column, and
-Figure 2 says **"minimum after 1 restart"** instead of a plain "minimum confirmed" — a
+the frontier-orbitals figure says **"minimum after 1 restart"** instead of a plain "minimum confirmed" — a
 geometry that needed rescuing should not pass as one that did not.
 
 Verified on planar ammonia, the textbook case:
@@ -752,7 +757,7 @@ and says so explicitly:
 flat mode -27.8 cm-1 (free internal rotation, not a reaction saddle)
 ```
 
-Figure 2 shows this as an amber badge rather than the red `NOT A MINIMUM`, and
+the frontier-orbitals figure shows this as an amber badge rather than the red `NOT A MINIMUM`, and
 `descriptors.csv` carries a `flat_mode` column. The distinction matters because no amount of
 further optimization will remove such a mode — the correct treatment is a hindered-rotor
 partition function, which is outside what this pipeline does. The thermochemistry it prints
@@ -770,7 +775,7 @@ include it either (both verified on ORCA 6.1.0).
 `orca_vpot` has an MPI build, `orca_vpot_mpi`, and it is a trap. The MPI binary re-reads
 `<basename>.SHARKINP.tmp`, and **ORCA deletes that file when a job terminates normally**. So
 the parallel path works only after a crashed job and fails after a successful one — the
-failure mode is an empty MEP row in Figure 2 with the single-point job reporting success.
+failure mode is an empty MEP row in the frontier-orbitals figure with the single-point job reporting success.
 
 `cubes.esp_nprocs` therefore defaults to `1`. Serial evaluation is not the bottleneck people
 expect: at wB97X-D4/6-311++G(d,p) with SMD water, a 512 000-point grid on benzene took 36.9 s.

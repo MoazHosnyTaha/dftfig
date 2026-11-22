@@ -36,7 +36,7 @@ def figure_project(make_cfg, fixtures, tmp_path):
         "molecules.definitions": {"ANIL": "Nc1ccccc1", "PHEN": "Oc1ccccc1"},
         "figures.formats": ["png"],       # the PDF of the same figure doubles the runtime
         "figures.dpi": 110,
-        "figures.which": ["fig12", "fig14"],
+        "figures.which": ["speciation", "mpo_metabolism"],
         "conformers.n_confs": 5,
     })
     specs = M.load_molecules(cfg)
@@ -73,15 +73,15 @@ def _assert_real_png(paths):
 
 
 def test_fig12_renders_from_the_structures_and_the_property_table(figure_ctx):
-    from dftfig.figures import fig12
+    from dftfig.figures import speciation
 
-    _assert_real_png(fig12.build(figure_ctx))
+    _assert_real_png(speciation.build(figure_ctx))
 
 
 def test_fig14_renders_from_the_structures_and_the_property_table(figure_ctx):
-    from dftfig.figures import fig14
+    from dftfig.figures import mpo_metabolism
 
-    _assert_real_png(fig14.build(figure_ctx))
+    _assert_real_png(mpo_metabolism.build(figure_ctx))
 
 
 def test_fig12_shows_the_predicted_pka_of_each_compound(figure_project):
@@ -101,15 +101,15 @@ def test_the_figures_stage_writes_png_and_the_resolved_property_table(figure_pro
     made = cli.stage_figures(cfg, specs, descriptors)
     out = Path(cfg["execution"]["work_dir"]) / "figures"
     assert (out / "properties_resolved.csv").is_file()
-    assert sorted(p.name for p in made) == ["figure12.png", "figure14.png"]
+    assert sorted(p.name for p in made) == ["mpo_metabolism.png", "speciation.png"]
     for p in made:
         assert Path(p).stat().st_size > MIN_PNG_BYTES
 
 
 def test_an_unknown_format_is_not_silently_produced(figure_ctx):
-    from dftfig.figures import fig14
+    from dftfig.figures import mpo_metabolism
 
-    assert all(Path(p).suffix == ".png" for p in fig14.build(figure_ctx))
+    assert all(Path(p).suffix == ".png" for p in mpo_metabolism.build(figure_ctx))
 
 
 # -------------------------------------------------------------------- PyMOL-dependent
