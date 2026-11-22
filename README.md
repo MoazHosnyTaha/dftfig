@@ -850,6 +850,55 @@ tail -f runs/<molecule>/water/<molecule>_water_opt.out
 
 ---
 
+## 10b. Extending dftfig — writing your own figure
+
+The four built-in figures are a medicinal-chemistry story. Yours will be different, and
+you do not have to fork dftfig to draw it: the figure layer is a documented, versioned
+plugin API, and the four built-ins are its reference implementations.
+
+A figure is one Python module that declares its name, a title, what it needs, and a
+`build(ctx)` function:
+
+```python
+from dftfig.figureapi import REQ_FUKUI, FigureContext
+
+NAME = "fukui_bars"
+TITLE = "Condensed Fukui indices per heavy atom"
+REQUIRES = (REQ_FUKUI,)
+
+def build(ctx: FigureContext) -> list:
+    ...
+    return ctx.save(fig, "fukui_bars")
+```
+
+`ctx` is the whole contract: the molecules in a defined atom order with their charge,
+multiplicity and formula; the DFT descriptor table; the resolved property table; the
+Fukui tables; accessors that locate a cube file or produce a rendered 3D panel; the
+level-of-theory string and the provenance stamp. A figure never builds a path of its own,
+so the layout of a run directory can change without breaking anybody's plugin.
+
+Two ways to install one, both ending in the same registry:
+
+```bash
+# project-local, no packaging at all
+mkdir -p dft_figures && cp fukui_bars.py dft_figures/
+dft params figures.which        # it is listed, with where it came from
+```
+
+```toml
+# or shipped in a package, discovered on pip install
+[project.entry-points."dftfig.figures"]
+fukui_bars = "mypkg.figures.fukui_bars"
+```
+
+Then name it in `figures.which` like any built-in. `REQUIRES` is checked before the
+figure is called, so one that needs PyMOL on a machine without PyMOL is skipped with that
+sentence rather than raising from inside the renderer.
+
+- the tutorial, built from scratch: [`docs/writing-a-figure.md`](docs/writing-a-figure.md)
+- a runnable example: [`examples/fukui_bars/`](examples/fukui_bars/)
+- the contract itself, with its versioning rules: `dftfig/figureapi.py`
+
 ## 11. Citing the methods
 
 Whatever you run, the caption needs: functional, both basis sets, the solvation model **named as

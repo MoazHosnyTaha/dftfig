@@ -54,10 +54,20 @@ importable, so a pip-only environment still runs everything else.
 
 ## Adding a figure
 
-Figures are plugins. A figure module receives the parsed results and the configuration
-and returns a matplotlib figure; it does not read ORCA output itself. See the figure
-authoring guide in the documentation, and `dftfig/figures/fig2.py` as the reference
-implementation.
+Figures are plugins, and the interface is documented in `dftfig/figureapi.py`. A figure
+module declares `NAME`, `TITLE` and `REQUIRES`, and exposes `build(ctx)` taking a
+`FigureContext` and returning the list of files it wrote. It reads nothing but that
+context: no ORCA output, no path arithmetic, no `cfg["execution"]["work_dir"]`.
+
+Start from [`docs/writing-a-figure.md`](docs/writing-a-figure.md), which builds one from
+scratch, and from `examples/fukui_bars/` which is the same figure ready to run. The four
+built-ins under `dftfig/figures/` are the reference implementations: fig12 for a figure
+that needs only the structures and the property table, fig13 for one colour scale shared
+across rendered panels, fig2 for the full case.
+
+You do not need a pull request to use your own figure - drop it in `./dft_figures` or
+ship it in a package declaring the `dftfig.figures` entry-point group. Send a pull
+request when the figure is one other people in your field would want.
 
 If your figure needs data the pipeline does not currently expose, say so in the issue
 rather than reaching around the interface — that is a gap in the contract, and other

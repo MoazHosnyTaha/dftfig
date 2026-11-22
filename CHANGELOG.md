@@ -7,6 +7,56 @@ and this project uses [semantic versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Added
+- A documented, versioned figure plugin API (`dftfig/figureapi.py`, `API_VERSION = 1`).
+  A figure is now a module that declares `NAME`, `TITLE` and `REQUIRES` and exposes
+  `build(ctx)`, where `ctx` is a `FigureContext` carrying the resolved config, the
+  molecules (RDKit mol in a defined atom order, plus charge, multiplicity, formula and
+  run directory), the DFT descriptor table, the resolved property table, the output
+  directory and the provenance block - with accessors for the things figures used to
+  work out for themselves: locating a cube file, obtaining a rendered 3D panel, reading
+  a descriptor for one molecule and medium, the reference solvent. A figure never builds
+  a path. The docstring states what a change to the contract would mean for existing
+  plugins.
+- Figure discovery from two sources: the `dftfig.figures` entry-point group, which the
+  four built-ins now use themselves and which any pip-installed package can declare, and
+  plain `.py` files in a project-local directory (`figures.plugin_dir`, `./dft_figures`
+  by default) for the common case where a user does not want to package anything. Both
+  appear in `dft params figures.which` and in the interview, with where they came from;
+  a project-local file overrides a built-in of the same name.
+- `REQUIRES` is checked before a figure is drawn, so a figure needing PyMOL on a machine
+  without PyMOL is skipped with that sentence instead of raising from inside the
+  renderer. A broken or malformed plugin is reported and skipped rather than killing the
+  run, and one declaring a higher `API_VERSION` than this dftfig provides is refused.
+- `docs/writing-a-figure.md`: a complete worked example built from scratch - a
+  condensed-Fukui bar panel, under 60 lines, no PyMOL - covering the whole loop from
+  writing the file to the PNG. The same figure ships runnable in
+  `examples/fukui_bars/`, and a test loads it through directory discovery and renders it.
+- `figures.plugin_dir` (advanced): where project-local figure modules are looked for.
+
+### Changed
+- fig2, fig12, fig13 and fig14 consume only the documented contract. They no longer
+  import `_save` out of `fig2`, construct run-directory paths, call `cubes`/`render`/`mlp`
+  directly, or read `cfg["execution"]["work_dir"]`. `stage_figures` dispatches through
+  the registry instead of four hard-coded `if` branches with four different argument
+  lists. The rendered output is unchanged - verified by regenerating all four figures
+  from a finished run and comparing them pixel by pixel against the previous
+  implementation.
+- `PYMOL_RGB` moved from `figures/fig2.py` to `render.py`, next to the palettes it
+  belongs to, and the matplotlib colour-bar ramps are now `figstyle.esp_colormap` /
+  `figstyle.mlp_colormap`, reachable from any plugin as `ctx.esp_colormap()` /
+  `ctx.mlp_colormap()`.
+
+### Fixed
+- `FigureContext.descriptor_row` / `property_row` return Python scalars. `df.iloc[0]`
+  hands back `numpy.bool_`, for which `value is True` is False - the test Figure 2 uses
+  to decide whether to print "minimum confirmed". The caption disappeared the moment the
+  row stopped coming from `DataFrame.iterrows`, which is covered by a test now.
+- fig12 no longer evaluates `int(permanent_charge or 0)` on a missing value. `NaN` is
+  truthy, so that expression reached `int(nan)` and raised `ValueError` for any compound
+  whose properties CSV left the column blank.
+- fig2's "minimum after N restarts" branch rebound the loop variable `n` - the compound
+  name - to the restart count. Harmless only because nothing read it afterwards.
+
 - A pytest suite: 207 tests over the parsers, the config layer, executable discovery,
   the pKa model, input generation under `execution.dry_run` and figure rendering. It
   needs neither ORCA nor a network connection; tests that drive ORCA or PyMOL carry the
