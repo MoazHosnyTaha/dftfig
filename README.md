@@ -88,9 +88,10 @@ Per-atom logP contributions on the molecular surface, with TPSA and clogP beneat
 logD against TPSA inside the CNS MPO desirable box, bubble area scaled by predicted
 permeability, and the most labile position from the radical Fukui index.
 
-The panels here are labelled with the SDF file names, which is what you get from a
-PubChem download. `figures.labels` maps those to anything you like — the run directories
-keep their own names, so renaming a compound does not recompute anything.
+The molecules are named `Conformer3D_COMPOUND_CID_176870` and `..._216239` on disk,
+because that is what a PubChem download is called. `figures.labels` maps those to
+Erlotinib and Sorafenib for the figures only — the run directories keep their own names,
+so relabelling costs one `dft run figures` and recomputes nothing.
 
 ## Commands
 
