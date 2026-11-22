@@ -30,7 +30,50 @@ def mlp_colormap(palette: str):
         f"mlp_{palette}", [PYMOL_RGB[c] for c in MLP_PALETTES[palette]])
 
 
+def needs_file_backend(current: object) -> bool:
+    """Is matplotlib currently pointed at a backend that wants a display?
+
+    ``current`` is ``rcParams["backend"]``, which is a sentinel object rather than a
+    string until matplotlib resolves it - in that case there is nothing to correct yet
+    and the environment variable set in ``dftfig/__init__`` decides.
+    """
+    return isinstance(current, str) and current.lower() in _interactive_backends()
+
+
+def _interactive_backends() -> frozenset[str]:
+    """Names of the backends that want a window, across matplotlib versions.
+
+    matplotlib 3.9 moved this list from ``rcsetup.interactive_bk`` into the backend
+    registry, and dftfig has to run on whatever matplotlib the user's environment has.
+    """
+    from matplotlib import rcsetup
+    names = getattr(rcsetup, "interactive_bk", None)
+    if names is None:
+        try:
+            from matplotlib.backends.registry import BackendFilter, backend_registry
+            names = backend_registry.list_builtin(BackendFilter.INTERACTIVE)
+        except ImportError:          # neither available: fall back to the usual names
+            names = ("qtagg", "qt5agg", "tkagg", "wxagg", "macosx", "gtk3agg", "gtk4agg")
+    return frozenset(n.lower() for n in names)
+
+
+def force_file_backend() -> None:
+    """Switch away from an interactive backend, late, if one slipped through.
+
+    The environment variable set at package import handles the normal case. This is the
+    backstop for when something imported matplotlib first and fixed the backend before
+    dftfig was imported at all.
+    """
+    if needs_file_backend(mpl.rcParams.get("backend")):
+        from .theme import note
+        was = mpl.rcParams["backend"]
+        mpl.use("Agg", force=True)
+        note(f"matplotlib was set to the interactive {was} backend; switched to Agg "
+             "because dftfig writes figures to files and never opens a window")
+
+
 def apply_style(dpi: int = 300, sizes: tuple = SIZES) -> None:
+    force_file_backend()
     base, anno, tick = sizes
     mpl.rcParams.update({
         "figure.dpi": 110,

@@ -6,6 +6,15 @@ and this project uses [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- The figures stage could hang forever on the first figure. dftfig never pinned a
+  matplotlib backend, so on a machine with PyQt installed - which chemistry
+  environments usually have, because PyMOL brings it in - matplotlib selected a Qt
+  backend and the first `plt.figure()` blocked inside QApplication creation. The
+  process sat at no CPU cost with no output, which is indistinguishable from a slow
+  render. dftfig now pins `MPLBACKEND=Agg` at package import unless the user set it
+  themselves; it writes figures to files and never opens a window.
+
 ### Added
 - The figures stage shows what it is doing. It names each figure before building it,
   reports anything that took more than ten seconds, and runs a spinner while PyMOL is
