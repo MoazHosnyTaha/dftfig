@@ -18,8 +18,8 @@ authors:
       Department of Pharmaceutical Chemistry, Faculty of Pharmacy,
       Sinai University - Kantara Branch, Ismailia, Egypt
 license: MIT
-version: "0.6.0"
-date-released: "2026-11-22"
+version: "0.7.0"
+date-released: "2026-11-23"
 repository-code: "https://github.com/MoazHosnyTaha/dftfig"
 keywords:
   - computational chemistry

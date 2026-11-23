@@ -6,17 +6,7 @@ and this project uses [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
-### Fixed
-- The frontier_orbitals figure is now as wide as its panels need, instead of as wide as
-  its longest line of text. The canvas already scaled with the molecule count, but the
-  style saves with `bbox_inches="tight"`, which grows the output until it contains every
-  artist - so the method footnote and the title, both fixed-length, set the width
-  whenever they were longer than the panels. Two molecules came out a third empty on the
-  right; four happened to look right because the panels were wider than the text. The
-  footnote now wraps to the figure width and the title shrinks to fit, and the bottom
-  margin is sized from the wrap so the extra lines do not land on the colour-bar label.
-  On two molecules the file goes from 7.29 to 4.98 inches wide; at four and above
-  nothing changes.
+## [0.7.0] - 2026-11-23
 
 ### Added
 - `figures.labels` maps a molecule name to the name the figures should print. Molecule
@@ -30,30 +20,6 @@ and this project uses [semantic versioning](https://semver.org/).
   unaffected. The ion single points follow the same functional, since the Koopmans
   descriptors compare them with the neutral.
 
-### Fixed
-- Each stage now decides for itself whether it needs a basis set and a dispersion
-  correction. A composite method carries both, so pairing a composite with a
-  non-composite across the two stages previously named a basis for the composite or
-  added dispersion twice.
-- `resume` no longer reuses a finished job whose level of theory has changed. It
-  compared only "did this terminate normally", so editing the functional and re-running
-  kept the old numbers while the figure footnote claimed the new method.
-- The figure footnote reports the two halves separately and omits the basis for a
-  composite, instead of printing the optimization functional for both.
-- Parameter help and module docstrings referred to the figures by the manuscript's old
-  numbers ("Figure 2", "Figure 13") after the 0.6.0 rename. Nine files updated; the one
-  remaining reference is the genuine citation of Figure 1 of the source paper.
-
-### Fixed
-- The figures stage could hang forever on the first figure. dftfig never pinned a
-  matplotlib backend, so on a machine with PyQt installed - which chemistry
-  environments usually have, because PyMOL brings it in - matplotlib selected a Qt
-  backend and the first `plt.figure()` blocked inside QApplication creation. The
-  process sat at no CPU cost with no output, which is indistinguishable from a slow
-  render. dftfig now pins `MPLBACKEND=Agg` at package import unless the user set it
-  themselves; it writes figures to files and never opens a window.
-
-### Added
 - The figures stage shows what it is doing. It names each figure before building it,
   reports anything that took more than ten seconds, and runs a spinner while PyMOL is
   working. PyMOL is silent until it exits, so a dense cube on a drug-sized molecule gave
@@ -68,6 +34,39 @@ and this project uses [semantic versioning](https://semver.org/).
 - The last references to the manuscript's figure numbers are gone from the prose: the
   renamed figures are now called `frontier_orbitals`, `speciation`, `lipophilicity` and
   `mpo_metabolism` everywhere, not only in the code.
+
+### Fixed
+- The frontier_orbitals figure is now as wide as its panels need, instead of as wide as
+  its longest line of text. The canvas already scaled with the molecule count, but the
+  style saves with `bbox_inches="tight"`, which grows the output until it contains every
+  artist - so the method footnote and the title, both fixed-length, set the width
+  whenever they were longer than the panels. Two molecules came out a third empty on the
+  right; four happened to look right because the panels were wider than the text. The
+  footnote now wraps to the figure width and the title shrinks to fit, and the bottom
+  margin is sized from the wrap so the extra lines do not land on the colour-bar label.
+  On two molecules the file goes from 7.29 to 4.98 inches wide; at four and above
+  nothing changes.
+
+- Each stage now decides for itself whether it needs a basis set and a dispersion
+  correction. A composite method carries both, so pairing a composite with a
+  non-composite across the two stages previously named a basis for the composite or
+  added dispersion twice.
+- `resume` no longer reuses a finished job whose level of theory has changed. It
+  compared only "did this terminate normally", so editing the functional and re-running
+  kept the old numbers while the figure footnote claimed the new method.
+- The figure footnote reports the two halves separately and omits the basis for a
+  composite, instead of printing the optimization functional for both.
+- Parameter help and module docstrings referred to the figures by the manuscript's old
+  numbers ("Figure 2", "Figure 13") after the 0.6.0 rename. Nine files updated; the one
+  remaining reference is the genuine citation of Figure 1 of the source paper.
+
+- The figures stage could hang forever on the first figure. dftfig never pinned a
+  matplotlib backend, so on a machine with PyQt installed - which chemistry
+  environments usually have, because PyMOL brings it in - matplotlib selected a Qt
+  backend and the first `plt.figure()` blocked inside QApplication creation. The
+  process sat at no CPU cost with no output, which is indistinguishable from a slow
+  render. dftfig now pins `MPLBACKEND=Agg` at package import unless the user set it
+  themselves; it writes figures to files and never opens a window.
 
 ## [0.6.0] - 2026-11-22
 
