@@ -8,6 +8,7 @@
 [![build](https://github.com/MoazHosnyTaha/dftfig/actions/workflows/build.yml/badge.svg)](https://github.com/MoazHosnyTaha/dftfig/actions/workflows/build.yml)
 [![python](https://img.shields.io/badge/python-3.10--3.13-blue)](https://www.python.org)
 [![license](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.24472276.svg)](https://doi.org/10.5281/zenodo.24472276)
 
 Give it structures; it gives you back the figures. dftfig drives ORCA through geometry
 optimization, frequencies, a property single point and the N±1 single points, then renders
@@ -170,26 +171,33 @@ binding have no structural estimate — supply them or the panels say so.
 
 ## Citing dftfig
 
+Each release is archived on Zenodo. Cite the DOI, not the repository URL.
+
 ```bibtex
 @software{hassanein_dftfig_2026,
-  author  = {Hassanein, Moaz H. T.},
-  title   = {{dftfig}: an automated ORCA DFT and figure pipeline for molecular structures},
-  version = {0.6.0},
-  year    = {2026},
-  url     = {https://github.com/MoazHosnyTaha/dftfig},
-  note    = {ORCID 0009-0001-1389-9305}
+  author    = {Hassanein, Moaz H. T.},
+  title     = {{dftfig}: an automated ORCA DFT and figure pipeline for molecular structures},
+  version   = {0.7.0},
+  year      = {2026},
+  publisher = {Zenodo},
+  doi       = {10.5281/zenodo.24472276},
+  url       = {https://doi.org/10.5281/zenodo.24472276},
+  note      = {ORCID 0009-0001-1389-9305}
 }
 ```
 
 > Hassanein, M. H. T. (2026). *dftfig: an automated ORCA DFT and figure pipeline for
-> molecular structures* (version 0.6.0) [Computer software].
-> https://github.com/MoazHosnyTaha/dftfig
+> molecular structures* (version 0.7.0) [Computer software]. Zenodo.
+> https://doi.org/10.5281/zenodo.24472276
 
-Use the version you actually ran — `dft --version`, or read it from `descriptors.csv` or the
-figure stamp. **Also cite what did the work:** dftfig orchestrates other people's software
-and computes nothing itself, so cite **ORCA** (the version in your `descriptors.csv`),
-**RDKit**, and **PyMOL** if you show the 3D panels. There is no DOI yet; one comes with the
-first archived release.
+`10.5281/zenodo.24472276` always resolves to the latest version. To pin the exact release you ran, use
+its version DOI instead — 0.7.0 is `10.5281/zenodo.24472277`, and every release lists its own on its
+Zenodo page.
+
+Use the version you actually ran — `dft --version`, or read it from `descriptors.csv` or
+the figure stamp. **Also cite what did the work:** dftfig orchestrates other people's
+software and computes nothing itself, so cite **ORCA** (the version in your
+`descriptors.csv`), **RDKit**, and **PyMOL** if you show the 3D panels.
 
 ## Contributing
 
