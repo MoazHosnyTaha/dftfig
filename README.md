@@ -201,7 +201,7 @@ Each release is archived on Zenodo. Cite the DOI, not the repository URL.
 > https://doi.org/10.5281/zenodo.24472276
 
 `10.5281/zenodo.24472276` always resolves to the latest version. To pin the exact release you ran, use
-its version DOI instead — 0.7.0 is `10.5281/zenodo.24472277`, and every release lists its own on its
+its version DOI instead — 0.8.0 is `10.5281/zenodo.24496467`, and every release lists its own on its
 Zenodo page.
 
 Use the version you actually ran — `dft --version`, or read it from `descriptors.csv` or
