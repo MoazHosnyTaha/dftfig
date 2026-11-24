@@ -1,0 +1,7 @@
+# Optional. Everything here overrides what the pipeline works out from
+# the structures. Leave it empty and pKa, logD, TPSA, MW, HBD and clogP
+# are all derived; fill a cell in and that value is used instead.
+# Permeability, clearance, PPB, logBB, HIA and P-gp have no structural
+# estimate - supply them from an ADMET model or leave the panels blank.
+# One row per compound; the molecule column must match the SDF file name.
+molecule,pKa_acidic,pKa_basic,pKa_basic_main,logP,logD74,TPSA,MW,HBD,Papp_Caco2,Papp_MDCK,CLint_u,PPB,logBB,HIA,Pgp_substrate

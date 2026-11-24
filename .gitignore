@@ -28,3 +28,6 @@ htmlcov/
 # scratch directories used while reproducing a user run
 repro/
 relabel/
+demo_check/
+dftfig-demo/
+demo_out/

@@ -69,12 +69,36 @@ dft doctor
       version 6.1.0
   OK  PyMOL: /home/you/miniconda3/envs/dftfig/bin/pymol
   OK  python packages: all present
+  OK  steric descriptors: MORFEUS present
 ```
 
 Linux and macOS are tested. Windows is expected to work and is not in the tested matrix:
 the arrow-key menus need termios, so there every question falls back automatically to a
 numbered prompt that takes the same answers. More detail in
 [docs/usage.md](docs/usage.md#installing).
+
+## Try it first — no ORCA needed
+
+```bash
+dft demo
+```
+
+A finished calculation ships with the package, so you can see every figure and both
+descriptor tables in about half a minute without installing ORCA or waiting on a single
+SCF cycle. Steps 3 and 4 above are not needed for this.
+
+What is bundled is a real run, not a mock: aniline and phenol at B3LYP-D3BJ/def2-SVP with
+a def2-TZVP property single point in CPCM water, with the genuine ORCA outputs and the
+real cubes that calculation produced. `dft demo` unpacks them into `./dftfig-demo` and
+runs the two stages that need no quantum chemistry — descriptors and figures — against
+them, exactly as it would on your own compounds.
+
+The pair is chosen rather than arbitrary. Aniline is a base and phenol is an acid, so the
+speciation figure shows one curve rising and one falling on the same pH axis, and the
+electrostatic potential panels share a single colour scale across both molecules. The
+config that produced it is left in `dftfig-demo/config.yaml`: change something and re-run
+`dft figures -c dftfig-demo/config.yaml` to see what that setting does, still without
+ORCA.
 
 ## Run
 
@@ -187,7 +211,7 @@ Each release is archived on Zenodo. Cite the DOI, not the repository URL.
 @software{hassanein_dftfig_2026,
   author    = {Hassanein, Moaz H. T.},
   title     = {{dftfig}: an automated ORCA DFT and figure pipeline for molecular structures},
-  version   = {0.8.0},
+  version   = {0.9.0},
   year      = {2026},
   publisher = {Zenodo},
   doi       = {10.5281/zenodo.24472276},
@@ -197,11 +221,11 @@ Each release is archived on Zenodo. Cite the DOI, not the repository URL.
 ```
 
 > Hassanein, M. H. T. (2026). *dftfig: an automated ORCA DFT and figure pipeline for
-> molecular structures* (version 0.8.0) [Computer software]. Zenodo.
+> molecular structures* (version 0.9.0) [Computer software]. Zenodo.
 > https://doi.org/10.5281/zenodo.24472276
 
 `10.5281/zenodo.24472276` always resolves to the latest version. To pin the exact release you ran, use
-its version DOI instead — 0.8.0 is `10.5281/zenodo.24496467`, and every release lists its own on its
+its version DOI instead — 0.9.0 is `10.5281/zenodo.PENDING`, and every release lists its own on its
 Zenodo page.
 
 Use the version you actually ran — `dft --version`, or read it from `descriptors.csv` or

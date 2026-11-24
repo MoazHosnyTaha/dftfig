@@ -209,6 +209,8 @@ python -m dftfig sp          -c config.yaml   # property single point, cubes
 python -m dftfig fukui       -c config.yaml   # N-1 / N+1 single points
 python -m dftfig cubes       -c config.yaml   # MEP via orca_vpot
 python -m dftfig descriptors -c config.yaml   # descriptors.csv, fukui_*.csv, atom_descriptors.csv
+
+dft demo                                     # the bundled run - no ORCA, no waiting
 python -m dftfig figures     -c config.yaml   # the four figures
 python -m dftfig status      -c config.yaml   # what is done, what is missing
 ```

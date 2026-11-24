@@ -6,6 +6,39 @@ and this project uses [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.0] - 2026-11-24
+
+### Added
+- `dft demo` builds every figure and both descriptor tables from a finished calculation
+  that ships with the package, in about half a minute, with no ORCA installed. Until now
+  the only way to find out what dftfig produces was to install a quantum chemistry
+  program and wait hours - a poor way to evaluate a tool and an impossible one for
+  anyone deciding whether installing ORCA was worth it at all.
+
+  What is bundled is a real run, not a mock: aniline and phenol at B3LYP-D3BJ/def2-SVP
+  with a def2-TZVP property single point in CPCM water, with the genuine ORCA outputs
+  and the real cubes those calculations produced, gzipped to keep the package small
+  (5.7 MB). `dft demo` unpacks them into ./dftfig-demo and runs the two stages that need
+  no quantum chemistry - descriptors and figures - against them, so the demo exercises
+  the same code a real run does. The config it used is left behind, so a setting can be
+  changed and the figures rebuilt, still without ORCA.
+
+  The pair is chosen rather than arbitrary. Aniline is a base and phenol is an acid, so
+  the speciation figure shows one curve rising and one falling on the same pH axis; and
+  two molecules is the smallest set that demonstrates what the figures are for, which is
+  comparing compounds on a shared scale.
+
+### Changed
+- `dft doctor` reports whether MORFEUS is present, separately from the packages that
+  decide its exit code, since the steric descriptors are optional.
+
+### Fixed
+- The three tests that start a fresh interpreter to check the matplotlib backend
+  silently depended on dftfig being pip-installed in the current environment: without
+  it the child could not import the package and the test failed for a reason unrelated
+  to backends. They now set the import path explicitly, through a `child_env` fixture
+  shared with the demo test.
+
 ## [0.8.0] - 2026-11-24
 
 ### Added

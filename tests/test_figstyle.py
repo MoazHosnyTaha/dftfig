@@ -17,7 +17,7 @@ def test_unresolved_backend_sentinel_is_left_alone():
     assert not needs_file_backend(rcsetup._auto_backend_sentinel)
 
 
-def test_package_import_pins_a_file_backend():
+def test_package_import_pins_a_file_backend(child_env):
     """Importing dftfig must pin the backend before anything resolves it.
 
     Asserted on the environment variable rather than on get_backend(), because
@@ -25,36 +25,30 @@ def test_package_import_pins_a_file_backend():
     on a box with no Qt whether or not the fix is present, which would pass for the
     wrong reason.
     """
-    import os
     import subprocess
     import sys
-    env = {k: v for k, v in os.environ.items() if k != "MPLBACKEND"}
     out = subprocess.run(
         [sys.executable, "-c", "import os, dftfig; print(os.environ['MPLBACKEND'])"],
-        capture_output=True, text=True, check=True, env=env)
+        capture_output=True, text=True, check=True, env=child_env(MPLBACKEND=None))
     assert out.stdout.strip() == "Agg"
 
 
-def test_an_empty_backend_variable_counts_as_unset():
+def test_an_empty_backend_variable_counts_as_unset(child_env):
     """MPLBACKEND='' makes matplotlib auto-select, so it must not be left alone."""
-    import os
     import subprocess
     import sys
     out = subprocess.run(
         [sys.executable, "-c", "import os, dftfig; print(os.environ['MPLBACKEND'])"],
-        capture_output=True, text=True, check=True,
-        env={**os.environ, "MPLBACKEND": ""})
+        capture_output=True, text=True, check=True, env=child_env(MPLBACKEND=""))
     assert out.stdout.strip() == "Agg"
 
 
-def test_a_deliberate_backend_choice_is_respected():
-    import os
+def test_a_deliberate_backend_choice_is_respected(child_env):
     import subprocess
     import sys
     out = subprocess.run(
         [sys.executable, "-c", "import os, dftfig; print(os.environ['MPLBACKEND'])"],
-        capture_output=True, text=True, check=True,
-        env={**os.environ, "MPLBACKEND": "pdf"})
+        capture_output=True, text=True, check=True, env=child_env(MPLBACKEND="pdf"))
     assert out.stdout.strip() == "pdf"
 
 

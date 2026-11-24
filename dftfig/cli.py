@@ -14,6 +14,7 @@ so anything you can click you can also script:
     dft init             scaffold config.yaml, molecules/ and data/ in this folder
     dft where            show the installation and config paths
     dft doctor           check ORCA, PyMOL, cores and packages on this machine
+    dft demo [DIR]       build figures from a bundled finished run - no ORCA needed
 """
 from __future__ import annotations
 
@@ -61,6 +62,8 @@ MENU = [
      "Show where the figures, cubes and tables were written"),
     ("8", "Check this machine", "doctor",
      "ORCA, PyMOL, cores, memory and Python packages - run this first if something fails"),
+    ("d", "Try the demo", "demo",
+     "Build figures from a bundled finished calculation - needs no ORCA and no waiting"),
     ("9", "Verify results", "verify",
      "Check every input, output, cube and figure against the run manifest"),
     ("q", "Quit", "quit", ""),
@@ -373,6 +376,9 @@ def interactive(cfg_path: Path) -> int:
                 _run_stage(cfg_path, ["verify"])
         elif action == "doctor":
             _doctor()
+        elif action == "demo":
+            from .demo import run as _demo
+            _demo("dftfig-demo")
         elif action == "open":
             _open_results(cfg_path)
         elif action == "init":
@@ -419,6 +425,9 @@ def main(argv=None) -> int:
         return 0
     if cmd == "doctor":
         return _doctor()
+    if cmd == "demo":
+        from .demo import run as _demo
+        return _demo(rest[0] if rest else "dftfig-demo")
     if cmd == "where":
         _where()
         return 0

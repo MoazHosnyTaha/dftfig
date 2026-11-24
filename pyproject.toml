@@ -82,7 +82,7 @@ version = { attr = "dftfig.__version__" }
 packages = ["dftfig", "dftfig.figures", "dftfig.templates"]
 
 [tool.setuptools.package-data]
-dftfig = ["templates/*"]
+dftfig = ["templates/*", "demo_data/*", "demo_data/runs/*/water/*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

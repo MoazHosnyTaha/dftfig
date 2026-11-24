@@ -33,6 +33,35 @@ REAL_OUTPUTS = {
 }
 
 
+@pytest.fixture
+def child_env():
+    """Build the environment for a subprocess that has to `import dftfig`.
+
+    A few things can only be tested honestly by starting a fresh interpreter: the
+    matplotlib backend is pinned at import time, and the demo's whole claim is that it
+    runs with no ORCA anywhere. Those children do not inherit the import path pytest
+    arranges for the parent, so without this they pass or fail according to whether the
+    package happens to be pip-installed in the current environment rather than according
+    to the behaviour under test.
+
+    Pass `KEY=None` to remove a variable from the child's environment.
+    """
+    import os
+
+    def _env(**overrides):
+        env = dict(os.environ)
+        root = str(Path(__file__).resolve().parents[1])
+        existing = env.get("PYTHONPATH")
+        env["PYTHONPATH"] = os.pathsep.join([root, existing]) if existing else root
+        for key, value in overrides.items():
+            if value is None:
+                env.pop(key, None)
+            else:
+                env[key] = value
+        return env
+    return _env
+
+
 def pytest_runtest_setup(item):
     """Skip marked tests when the external program they drive is not installed.
 
