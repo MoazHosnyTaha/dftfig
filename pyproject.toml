@@ -45,6 +45,7 @@ dependencies = [
     "pillow>=9.0",
     "rich>=13.0",
     "rdkit>=2022.09",
+    "morfeus-ml>=0.7",
 ]
 
 [project.optional-dependencies]

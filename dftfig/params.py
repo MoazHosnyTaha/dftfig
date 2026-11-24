@@ -683,6 +683,21 @@ G_PROPERTY = Group(
                        "geometry. Vertical, and physically defensible."),
             ],
         ),
+        Param(
+            "property.sterics", "Steric and shape descriptors", "bool", True,
+            help="Adds a steric descriptor block computed from the optimized geometry: "
+                 "solvent-accessible surface, dispersion (P_int), buried volume per "
+                 "atom, pyramidalization, and the inertial shape indices.",
+            guidance="These come out of MORFEUS and RDKit from the structure the single "
+                     "point already ran on, so they cost no quantum chemistry and no "
+                     "extra program. Molecular terms are appended to descriptors.csv; "
+                     "atom-centred terms are written to atom_descriptors.csv beside the "
+                     "Fukui functions, which is the table to use as a feature matrix "
+                     "for a QSAR or machine-learning model. Note the descriptors "
+                     "describe the single optimized conformer, not a Boltzmann-weighted "
+                     "ensemble.",
+            cost="A couple of seconds per molecule. No ORCA time.",
+        ),
     ],
 )
 

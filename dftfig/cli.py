@@ -228,6 +228,15 @@ def _doctor() -> int:
         f"python packages: missing {', '.join(missing)}" if missing
         else "python packages: all present")
 
+    # Optional, so it is reported separately from the packages that decide the exit code:
+    # without it the electronic descriptors are still produced, with the steric columns
+    # simply absent from both tables.
+    from . import sterics
+    usable, why = sterics.available()
+    (ok if usable else warn)(
+        "steric descriptors: MORFEUS present" if usable else
+        f"steric descriptors: unavailable - {why}. pip install morfeus-ml")
+
     console.print(f"\n  [muted]remembered paths:[/muted] [value]{rep['user_config']}[/value]\n")
     return 0 if (rep["orca"] and not missing) else 1
 

@@ -30,6 +30,7 @@ import pandas as pd
 from . import molecules as _M
 from . import parsers
 from . import provenance
+from . import sterics
 from .orca_io import DIELECTRIC
 from .parsers import HARTREE_TO_EV
 from .theme import bad, ok, warn
@@ -82,6 +83,13 @@ def collect(cfg: dict) -> pd.DataFrame:
                 "dipole_D": parsers.dipole(sp),
                 **hl,
             }
+
+            # Steric and shape descriptors, from the same optimized geometry the single
+            # point was run on - so they describe the structure the electronic numbers
+            # above belong to, not a force-field pose.
+            if _want_sterics(cfg):
+                syms, xyz = parsers.geometry(sp)
+                row.update(sterics.molecular(syms, xyz))
 
             opt = d / f"{name}_{solvent}_opt.out"
             if opt.exists() and parsers.terminated_normally(opt):
@@ -229,6 +237,79 @@ def fukui(cfg: dict) -> dict[str, pd.DataFrame]:
         ok(f"{name}: Fukui -> {out.name}  (most electrophilic sites: atoms {top_n}; "
            f"most nucleophilic: atoms {top_e})")
     return tables
+
+
+def _want_sterics(cfg: dict) -> bool:
+    """Whether to compute steric descriptors, warning once if they were asked for and
+    MORFEUS is not installed."""
+    if not cfg.get("property", {}).get("sterics", True):
+        return False
+    usable, why = sterics.available()
+    if not usable and not _want_sterics._warned:
+        warn(f"steric descriptors requested but unavailable: {why}. "
+             "Install it with `pip install morfeus-ml`, or set property.sterics to "
+             "false to stop asking.")
+        _want_sterics._warned = True
+    return usable
+
+
+_want_sterics._warned = False
+
+
+def atom_table(cfg: dict, fukui_tables: dict[str, pd.DataFrame] | None = None) -> pd.DataFrame:
+    """One row per molecule x medium x atom: steric descriptors beside the Fukui block.
+
+    The two halves come from different places and cover different ground. Steric terms
+    are geometric, so they exist for every medium that optimized. Fukui functions need
+    the N-1 and N+1 single points, which are run in the reference medium only, so those
+    columns are filled for that medium and empty elsewhere - stated here rather than
+    silently, because an empty cell in a descriptor table is otherwise indistinguishable
+    from a failed calculation.
+    """
+    if not _want_sterics(cfg):
+        return pd.DataFrame()
+
+    work = Path(cfg["execution"]["work_dir"])
+    ref = cfg["figures"]["reference_solvent"]
+    fukui_tables = fukui_tables or {}
+    rows = []
+
+    for name in _M.names(cfg):
+        for solvent in cfg["solvation"]["solvents"]:
+            sp = work / name / solvent / f"{name}_{solvent}_sp.out"
+            if not sp.exists() or not parsers.terminated_normally(sp):
+                continue
+            syms, xyz = parsers.geometry(sp)
+            atoms = sterics.atomic(syms, xyz)
+            if not atoms:
+                continue
+
+            fk = fukui_tables.get(name) if solvent == ref else None
+            if fk is None and solvent == ref:
+                cached = work / name / f"fukui_{name}_{ref}.csv"
+                if cached.exists():
+                    fk = pd.read_csv(cached)
+            fk_by_atom = {}
+            if fk is not None and not fk.empty:
+                drop = {"atom_index_0based", "atom_index_1based", "element"}
+                keep = [c for c in fk.columns if c not in drop]
+                fk_by_atom = {int(r["atom_index_0based"]): {c: r[c] for c in keep}
+                              for _, r in fk.iterrows()}
+
+            for a in atoms:
+                row = {"molecule": name, "medium": solvent, **a}
+                row.update(fk_by_atom.get(a["atom_index_0based"], {}))
+                rows.append(row)
+
+    df = pd.DataFrame(rows)
+    if df.empty:
+        return df
+    out = work / "atom_descriptors.csv"
+    df.to_csv(out, index=False, float_format="%.6f")
+    n_mol = df["molecule"].nunique()
+    ok(f"atom-centred descriptors for {len(df)} atoms across {n_mol} "
+       f"molecule{'s' if n_mol != 1 else ''} -> {out}")
+    return df
 
 
 def _saddle_restarts(work) -> dict:

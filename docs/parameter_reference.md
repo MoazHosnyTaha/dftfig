@@ -442,6 +442,15 @@ How ionization energy and electron affinity are obtained for the global reactivi
 | `koopmans` | Koopmans only | IE = -e(HOMO), EA = -e(LUMO). Reproduces the manuscript's Table S1 approach. | `paper` `fast` |
 | `delta_scf` | Delta-SCF only | IE = E(cation) - E(neutral), EA = E(neutral) - E(anion), all at the neutral geometry. Vertical, and physically defensible. |  |
 
+### `property.sterics`
+**Steric and shape descriptors** · type `bool` · default `True`
+
+Adds a steric descriptor block computed from the optimized geometry: solvent-accessible surface, dispersion (P_int), buried volume per atom, pyramidalization, and the inertial shape indices.
+
+**How to choose.** These come out of MORFEUS and RDKit from the structure the single point already ran on, so they cost no quantum chemistry and no extra program. Molecular terms are appended to descriptors.csv; atom-centred terms are written to atom_descriptors.csv beside the Fukui functions, which is the table to use as a feature matrix for a QSAR or machine-learning model. Note the descriptors describe the single optimized conformer, not a Boltzmann-weighted ensemble.
+
+**Cost.** A couple of seconds per molecule. No ORCA time.
+
 ## Fukui functions  (`fukui`)
 *Local reactivity: which atoms are electrophilic or nucleophilic.*
 

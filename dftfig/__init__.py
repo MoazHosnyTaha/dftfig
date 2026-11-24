@@ -1,7 +1,7 @@
 """dftfig - automated DFT and figure pipeline for ORCA."""
 import os
 
-__version__ = "0.7.0"
+__version__ = "0.8.0"
 
 # Pick a file-writing matplotlib backend before anything imports matplotlib.
 #

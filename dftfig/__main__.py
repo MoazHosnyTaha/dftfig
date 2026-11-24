@@ -294,9 +294,10 @@ def stage_cubes(cfg):
 
 
 def stage_descriptors(cfg):
-    banner("descriptors", "global reactivity indices and condensed Fukui functions")
+    banner("descriptors", "reactivity indices, Fukui functions and steric descriptors")
     df = descmod.collect(cfg)
-    descmod.fukui(cfg)
+    tables = descmod.fukui(cfg)
+    descmod.atom_table(cfg, tables)
     if not df.empty:
         _print_descriptor_table(cfg, df)
     return df

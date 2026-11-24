@@ -102,8 +102,18 @@ does, how to choose it and what it costs. Enter keeps the value shown.
 | `lipophilicity` | per-atom Crippen logP painted on the molecular surface |
 | `mpo_metabolism` | logD against TPSA with the CNS MPO score, plus sites of metabolism from the radical Fukui index |
 
-Plus `descriptors.csv` — every number behind the figures, with a `warnings` column — and
-`manifest.json`, which `dft verify` checks against the files on disk.
+Plus two descriptor tables and a manifest:
+
+| file | contents |
+|---|---|
+| `descriptors.csv` | one row per molecule × medium: every number behind the figures, a `warnings` column, and the whole-molecule descriptor set — electronic (IE, EA, χ, μ, η, ω, thermochemistry) beside steric and shape (SASA, dispersion P<sub>int</sub>, the inertial shape indices) |
+| `atom_descriptors.csv` | one row per atom: condensed Fukui functions and charges beside per-atom SASA, dispersion, buried volume and pyramidalization — a feature matrix ready for a QSAR or machine-learning model |
+| `manifest.json` | versions, settings hash and a SHA-256 per file, which `dft verify` checks against what is on disk |
+
+The steric descriptors come from [MORFEUS](https://github.com/digital-chemistry-laboratory/morfeus)
+and RDKit, computed on the geometry ORCA already optimized — no extra quantum chemistry
+and no external program. They describe that one optimized conformer, not a
+Boltzmann-weighted ensemble. Set `property.sterics: false` to skip them.
 
 ## What the figures look like
 
@@ -177,7 +187,7 @@ Each release is archived on Zenodo. Cite the DOI, not the repository URL.
 @software{hassanein_dftfig_2026,
   author    = {Hassanein, Moaz H. T.},
   title     = {{dftfig}: an automated ORCA DFT and figure pipeline for molecular structures},
-  version   = {0.7.0},
+  version   = {0.8.0},
   year      = {2026},
   publisher = {Zenodo},
   doi       = {10.5281/zenodo.24472276},
@@ -187,7 +197,7 @@ Each release is archived on Zenodo. Cite the DOI, not the repository URL.
 ```
 
 > Hassanein, M. H. T. (2026). *dftfig: an automated ORCA DFT and figure pipeline for
-> molecular structures* (version 0.7.0) [Computer software]. Zenodo.
+> molecular structures* (version 0.8.0) [Computer software]. Zenodo.
 > https://doi.org/10.5281/zenodo.24472276
 
 `10.5281/zenodo.24472276` always resolves to the latest version. To pin the exact release you ran, use
@@ -197,7 +207,8 @@ Zenodo page.
 Use the version you actually ran — `dft --version`, or read it from `descriptors.csv` or
 the figure stamp. **Also cite what did the work:** dftfig orchestrates other people's
 software and computes nothing itself, so cite **ORCA** (the version in your
-`descriptors.csv`), **RDKit**, and **PyMOL** if you show the 3D panels.
+`descriptors.csv`), **RDKit**, **PyMOL** if you show the 3D panels, and **MORFEUS** if
+you report the steric descriptors.
 
 ## Contributing
 

@@ -208,7 +208,7 @@ python -m dftfig opt         -c config.yaml   # OPT (+FREQ), minimum check
 python -m dftfig sp          -c config.yaml   # property single point, cubes
 python -m dftfig fukui       -c config.yaml   # N-1 / N+1 single points
 python -m dftfig cubes       -c config.yaml   # MEP via orca_vpot
-python -m dftfig descriptors -c config.yaml   # descriptors.csv, fukui_*.csv
+python -m dftfig descriptors -c config.yaml   # descriptors.csv, fukui_*.csv, atom_descriptors.csv
 python -m dftfig figures     -c config.yaml   # the four figures
 python -m dftfig status      -c config.yaml   # what is done, what is missing
 ```
@@ -419,7 +419,8 @@ runs/
       render_*.png  render_*.pml    panel images and the PyMOL script that drew each one
       CCB1_mlp.pdb                  per-atom lipophilicity in the B-factor column
     fukui_CCB1_water.csv            f+, f-, f0, Δf, Δω per atom
-  descriptors.csv                   one row per molecule × medium
+  descriptors.csv                   one row per molecule × medium: electronic + steric
+  atom_descriptors.csv              one row per atom: Fukui + steric descriptors
   manifest_{opt,sp,fukui}.json      per-job status, wall time, energies
   manifest.json                     provenance: versions, settings hash, SHA-256 per file
   figures/

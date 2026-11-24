@@ -123,6 +123,66 @@ off and draw each compound at the formal charge of the structure you supplied.
 ---
 
 
+## Steric and shape descriptors
+
+Everything in this section is computed from element symbols and Cartesian coordinates
+alone — the geometry ORCA already optimized. No extra quantum chemistry, no external
+program, no second conformer. The electronic half of the descriptor set comes from the
+single points at the level of theory the run was configured with; this is the steric half
+beside it.
+
+**Whole-molecule, appended to `descriptors.csv`:**
+
+| column | meaning |
+|---|---|
+| `sasa_area_A2`, `sasa_volume_A3` | solvent-accessible surface and the volume it encloses |
+| `disp_area_A2`, `disp_volume_A3` | the same on the dispersion surface |
+| `disp_p_int`, `disp_p_min`, `disp_p_max` | dispersion descriptor P<sub>int</sub> and its range over the surface — how dispersion-attractive the molecule is |
+| `max_diameter_A` | largest interatomic distance: the longest dimension |
+| `pmi1`–`pmi3`, `npr1`, `npr2` | principal moments of inertia and the normalised ratios that place a molecule on the rod–disc–sphere triangle |
+| `asphericity`, `eccentricity`, `spherocity_index`, `inertial_shape_factor` | shape indices derived from those moments |
+| `radius_of_gyration_A` | mass-weighted spread about the centre of mass |
+| `plane_best_fit_A` | mean deviation from the best-fitting plane: how flat the molecule is |
+
+**Per atom, written to `atom_descriptors.csv`** beside the Fukui functions and charges:
+`sasa_area_A2`, `disp_area_A2`, `disp_p_int`, `disp_p_min`, `disp_p_max`,
+`buried_volume_A3`, `free_volume_A3`, `buried_volume_fraction`, `coordination_number`,
+`pyramidalization_P` and `pyramidalization_angle_deg`.
+
+This is the table to hand a QSAR or machine-learning model: one row per atom, the local
+electronic response and the local steric environment side by side, with the molecule and
+medium named in the first two columns.
+
+Three choices in there are not the library defaults, and are worth knowing about:
+
+- **Buried volume counts hydrogens.** MORFEUS excludes them by default, which is right
+  for a phosphine cone around a metal centre and wrong here — on an organic molecule the
+  hydrogens are most of what crowds an atom. Excluding them gives methane's carbon a
+  buried volume of exactly zero.
+- **Pyramidalization is computed from bonds, not proximity.** Asked for the neighbours of
+  an atom, MORFEUS takes the three nearest ones, which hands every hydrogen a
+  pyramidalization near 2. It is reported here only for atoms with exactly three bonded
+  neighbours, from a covalent-radius connectivity matrix, and left empty elsewhere.
+- **Fukui columns are filled for the reference medium only.** The condensed Fukui
+  functions need the N−1 and N+1 single points, which are run in the reference solvent;
+  the steric columns are geometric and exist for every medium that optimized. An empty
+  Fukui cell in another medium means "not run there", not "failed".
+
+**These describe one conformer.** The geometry is the lowest-energy conformer from the
+force-field search, optimized at the DFT level — not a Boltzmann-weighted average over an
+ensemble. Workflows that report Boltzmann-weighted descriptors run a cheap semi-empirical
+method over every conformer to get the weights; dftfig does not, because the same
+molecules are then carried into DFT single points and figures where one geometry is what
+is wanted. If you need ensemble averages, generate the conformers separately and average
+the per-conformer tables yourself.
+
+Set `property.sterics: false` to skip the whole block. It needs
+[MORFEUS](https://github.com/digital-chemistry-laboratory/morfeus); without it the
+electronic descriptors are still produced and the steric columns are simply absent.
+
+---
+
+
 ## Properties the pipeline cannot calculate
 
 pKa, logD, permeability and clearance are not quantum-chemical observables. They come from

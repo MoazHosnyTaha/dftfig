@@ -13,3 +13,7 @@ dependencies:
   - pillow
   - rich
   - cclib
+  - pip
+  - pip:
+      # Steric descriptors (SASA, dispersion, buried volume, pyramidalization).
+      - morfeus-ml>=0.7

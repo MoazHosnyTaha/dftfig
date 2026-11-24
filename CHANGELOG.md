@@ -6,6 +6,43 @@ and this project uses [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.8.0] - 2026-11-24
+
+### Added
+- Steric and shape descriptors, computed from the geometry ORCA already optimized. The
+  descriptor set was electronic only: orbital energies, the reactivity indices derived
+  from them, and condensed Fukui functions. A molecule's reactivity also depends on how
+  crowded and what shape it is, and that half was missing.
+  - `descriptors.csv` gains nineteen whole-molecule columns: solvent-accessible surface
+    and volume, the dispersion surface and P_int with its range, the longest interatomic
+    distance, the three principal moments of inertia with their normalised ratios, and
+    the shape indices derived from them - asphericity, eccentricity, spherocity, inertial
+    shape factor, radius of gyration and mean deviation from the best-fitting plane.
+  - `atom_descriptors.csv` is new: one row per molecule x medium x atom, carrying
+    per-atom surface, dispersion, buried and free volume, coordination number and
+    pyramidalization beside the Fukui functions and charges. Until now the local
+    electronic data lived in one file per molecule; this is the single table to hand a
+    QSAR or machine-learning model as a feature matrix.
+  - `property.sterics` turns the block off. `dft doctor` reports whether MORFEUS is
+    present, and a run without it still produces the electronic descriptors.
+
+  Three choices there are not the library defaults. Buried volume counts hydrogens -
+  MORFEUS excludes them, which is right for a phosphine cone around a metal centre and
+  wrong on an organic molecule, where excluding them gives methane's carbon a buried
+  volume of exactly zero. Pyramidalization uses bonded neighbours from a covalent-radius
+  connectivity matrix rather than the three nearest atoms, which would otherwise hand
+  every hydrogen a pyramidalization near 2. And Fukui columns are filled for the
+  reference medium only, because that is where the ion single points run - an empty cell
+  elsewhere means "not computed there", not "failed".
+
+  These describe the one optimized conformer, not a Boltzmann-weighted ensemble.
+  Workflows that report ensemble averages run a semi-empirical method over every
+  conformer to get the weights; dftfig does not, and `docs/methods.md` says so where the
+  descriptors are documented.
+
+### Changed
+- `morfeus-ml` is a dependency, and `environment.yml` installs it through pip.
+
 ## [0.7.0] - 2026-11-23
 
 ### Added
