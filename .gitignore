@@ -31,3 +31,9 @@ relabel/
 demo_check/
 dftfig-demo/
 demo_out/
+
+# The bundled demo run is package data, not output. The `runs/` rule above is meant for
+# a user's working directory and silently swallowed all 22 files of it - caught only
+# because CI could not find them.
+!dftfig/demo_data/runs/
+!dftfig/demo_data/runs/**

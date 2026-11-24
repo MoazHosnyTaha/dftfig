@@ -6,6 +6,20 @@ and this project uses [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.9.1] - 2026-11-24
+
+### Fixed
+- The bundled demo run was missing from 0.9.0. `.gitignore` carries a `runs/` rule, there
+  to keep a user's working directory out of the repository, and it silently swallowed all
+  22 files of the demo payload - the ORCA outputs and the cubes - while committing the
+  two structures beside them. `dft demo` therefore failed on any install of 0.9.0 that
+  came from the repository or from the Zenodo archive of that tag. **Use 0.9.1 or later;
+  the 0.9.0 archive is incomplete.**
+
+  Caught by the test that checks the payload is present and complete, which is why it
+  exists: locally the files were on disk and everything passed, and only a clean checkout
+  could tell the difference.
+
 ## [0.9.0] - 2026-11-24
 
 ### Added
