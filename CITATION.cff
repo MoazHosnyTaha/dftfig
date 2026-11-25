@@ -17,13 +17,13 @@ authors:
     affiliation: >-
       Department of Pharmaceutical Chemistry, Faculty of Pharmacy,
       Sinai University - Kantara Branch, Ismailia, Egypt
-doi: "10.5281/zenodo.24503312"
+doi: "10.5281/zenodo.24536738"
 identifiers:
   - type: doi
     value: "10.5281/zenodo.24472276"
     description: "Concept DOI - always resolves to the latest version"
   - type: doi
-    value: "10.5281/zenodo.24503312"
+    value: "10.5281/zenodo.24536738"
     description: "Archived snapshot of version 0.10.0"
 license: MIT
 version: "0.10.0"
