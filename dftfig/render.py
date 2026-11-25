@@ -132,13 +132,40 @@ def _load_molecule(cfg: dict, xyz: Path, obj: str = "mol") -> list[str]:
     return lines
 
 
-def _orient(cfg: dict, obj: str = "mol", mcs_indices: list[int] | None = None) -> list[str]:
+def _orient(cfg: dict, obj: str = "mol",
+            view_rotation: list[float] | None = None) -> list[str]:
+    """PyMOL lines that put `obj` in the configured orientation.
+
+    For `first_molecule` the rotation is handed in already computed, because working it
+    out needs the whole molecule set and the substructure they share - see align.py.
+
+    It goes into the first nine elements of the view matrix, transposed on the way in.
+    `align` returns the world-to-camera rotation, which carries the view axes as its
+    rows; PyMOL's view matrix carries them as columns, and that is the transpose. This
+    was measured rather than assumed: after `cmd.orient` on a near-planar molecule the
+    axis of least depth falls out of the transpose (0.31 A across aniline) and not out of
+    the matrix as stored (3.50 A). Getting it the wrong way round gives each panel a
+    different but perfectly plausible orientation, which is the exact failure this
+    setting exists to prevent, so there is nothing in the picture to notice it by.
+
+    The zoom afterwards sets the distance and the clipping planes to fit the molecule as
+    it now sits. Rotating the camera rather than the atoms is what makes this work for
+    the cube panels, whose values live on a grid fixed in space and would be left behind
+    by a transform applied to the molecule.
+    """
     mode = cfg["render"]["orientation"]
     if mode == "none":
         return [f'cmd.zoom("{obj}", 2.0)']
-    if mode == "first_molecule" and mcs_indices:
-        sel = "+".join(str(i) for i in mcs_indices)
-        return [f'cmd.orient("{obj} and index {sel}")', f'cmd.zoom("{obj}", 2.0)']
+    if mode == "first_molecule" and view_rotation:
+        r = view_rotation
+        matrix = ", ".join(f"{v:.8f}" for v in
+                           (r[0], r[3], r[6], r[1], r[4], r[7], r[2], r[5], r[8]))
+        return [
+            "_view = list(cmd.get_view())",
+            f"_view[0:9] = [{matrix}]",
+            "cmd.set_view(_view)",
+            f'cmd.zoom("{obj}", 2.0)',
+        ]
     return [f'cmd.orient("{obj}")', f'cmd.zoom("{obj}", 2.0)']
 
 
@@ -161,7 +188,7 @@ def _labels(cfg: dict, obj: str = "mol") -> list[str]:
     return [f'cmd.label("{obj} and index {sel}", "\'%s%s\' % (elem, rank+1)")']
 
 
-def render_geometry(cfg: dict, name: str, solvent: str, mcs_indices=None) -> Path | None:
+def render_geometry(cfg: dict, name: str, solvent: str, view_rotation=None) -> Path | None:
     """Ball-and-stick render of the DFT-optimized geometry (the frontier_orbitals figure, row A)."""
     work = Path(cfg["execution"]["work_dir"]) / name / solvent
     xyz = work / f"{name}_{solvent}_sp.xyz"
@@ -175,14 +202,14 @@ def render_geometry(cfg: dict, name: str, solvent: str, mcs_indices=None) -> Pat
         return out
 
     s = _preamble(cfg) + _load_molecule(cfg, xyz) + _labels(cfg)
-    s += _orient(cfg, "mol", mcs_indices) + _png(cfg, out)
+    s += _orient(cfg, "mol", view_rotation) + _png(cfg, out)
     script = work / f"render_geom_{name}.pml"
     script.write_text("\n".join(s) + "\n")
     return out if _run_pymol(cfg, script, out, f"{name} geometry") else None
 
 
 def render_orbital(cfg: dict, name: str, solvent: str, which: str,
-                   mcs_indices=None) -> Path | None:
+                   view_rotation=None) -> Path | None:
     """Two-phase isosurface of one molecular orbital (the frontier_orbitals figure, row B)."""
     work = Path(cfg["execution"]["work_dir"]) / name / solvent
     cube = work / f"{which}.cube"
@@ -208,7 +235,7 @@ def render_orbital(cfg: dict, name: str, solvent: str, which: str,
         'cmd.set("transparency", 0.15, "orb_p")',
         'cmd.set("transparency", 0.15, "orb_n")',
     ]
-    s += _orient(cfg, "mol" if xyz.exists() else "orb_p", mcs_indices) + _png(cfg, out)
+    s += _orient(cfg, "mol" if xyz.exists() else "orb_p", view_rotation) + _png(cfg, out)
     script = work / f"render_{which}_{name}.pml"
     script.write_text("\n".join(s) + "\n")
     return out if _run_pymol(cfg, script, out, f"{name} {which.upper()}") else None
@@ -216,7 +243,7 @@ def render_orbital(cfg: dict, name: str, solvent: str, which: str,
 
 def render_mep(cfg: dict, name: str, solvent: str,
                vrange: float | tuple[float, float] | None = None,
-               mcs_indices=None) -> Path | None:
+               view_rotation=None) -> Path | None:
     """Electrostatic potential painted on the electron-density isosurface (the frontier_orbitals figure, row C)."""
     work = Path(cfg["execution"]["work_dir"]) / name / solvent
     dens, esp = work / "eldens.cube", work / "esp.cube"
@@ -256,14 +283,14 @@ def render_mep(cfg: dict, name: str, solvent: str,
         f'cmd.set("transparency", {transp}, "surf")',
         'cmd.disable("espramp")',
     ]
-    s += _orient(cfg, "mol" if xyz.exists() else "surf", mcs_indices) + _png(cfg, out)
+    s += _orient(cfg, "mol" if xyz.exists() else "surf", view_rotation) + _png(cfg, out)
     script = work / f"render_mep_{name}.pml"
     script.write_text("\n".join(s) + "\n")
     return out if _run_pymol(cfg, script, out, f"{name} electrostatic potential") else None
 
 
 def render_mlp(cfg: dict, name: str, pdb: Path, lo: float, hi: float,
-               mcs_indices=None) -> Path | None:
+               view_rotation=None) -> Path | None:
     """Molecular surface coloured by per-atom lipophilicity held in the B-factor column."""
     work = Path(pdb).parent
     out = work / f"render_mlp_{name}.png"
@@ -297,7 +324,7 @@ def render_mlp(cfg: dict, name: str, pdb: Path, lo: float, hi: float,
             'cmd.color("firebrick", "mol and elem O")',
             'cmd.color("green", "mol and elem Cl")',
         ]
-    s += _orient(cfg, "surf", mcs_indices) + _png(cfg, out)
+    s += _orient(cfg, "surf", view_rotation) + _png(cfg, out)
     script = work / f"render_mlp_{name}.pml"
     script.write_text("\n".join(s) + "\n")
     return out if _run_pymol(cfg, script, out, f"{name} lipophilicity surface") else None

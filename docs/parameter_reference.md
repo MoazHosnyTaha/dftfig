@@ -661,7 +661,7 @@ Background of the rendered panels.
 
 How each molecule is rotated before rendering.
 
-**How to choose.** 'principal_plane' puts the molecular plane in the screen plane using the inertia tensor, which is what you want for flat fused-ring systems - every panel ends up oriented the same way, so the reader compares chemistry rather than viewpoint. 'first_molecule' aligns everything onto the first molecule's frame, which is better for a congeneric series that shares a scaffold. 'none' keeps the ORCA orientation, which is essentially arbitrary.
+**How to choose.** 'principal_plane' puts the molecular plane in the screen plane using the inertia tensor, which is what you want for flat fused-ring systems - every panel ends up oriented the same way, so the reader compares chemistry rather than viewpoint. 'first_molecule' aligns everything onto the first molecule's frame, which is better for a congeneric series that shares a scaffold: the maximum common substructure is found across the whole set, the first molecule's copy of it defines the frame, and every other molecule is least-squares fitted onto that. If the set shares nothing large enough to orient by, dftfig says so and each panel falls back to its own principal axes. 'none' keeps the ORCA orientation, which is essentially arbitrary.
 
 | value | name | what it means | preset |
 |---|---|---|---|

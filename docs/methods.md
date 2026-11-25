@@ -123,6 +123,48 @@ off and draw each compound at the formal charge of the structure you supplied.
 ---
 
 
+## Putting a series in one viewpoint
+
+`render.orientation` decides how each molecule is turned before it is rendered, and for a
+congeneric series the choice changes what the figure is for.
+
+**`principal_plane`** (the default) orients each molecule on its own inertia tensor. For
+flat fused rings that puts the molecular plane in the screen plane, which is usually what
+you want. But the tensor is a property of the *whole* molecule, so it drifts as soon as
+the substituents differ — add a chain to one analogue and its scaffold tilts relative to
+the others.
+
+**`first_molecule`** fits the series into one frame instead. The maximum common
+substructure is found across the whole set (RDKit, rings matched whole), the first
+molecule's copy of it defines the reference frame from that core's principal axes, and
+every other molecule is least-squares fitted onto it (Kabsch). The scaffold then sits in
+the same place in every panel and the reader's eye compares the chemistry rather than the
+viewpoint. If the set shares nothing large enough to orient by, dftfig says so and each
+panel falls back to its own principal axes.
+
+Three details decided here rather than left to a library default:
+
+- **The camera moves, not the molecule.** The orbital and electrostatic-potential panels
+  are isosurfaces through a cube, and a cube's values live on a grid fixed in space —
+  rotating the molecule would leave its own density behind. The fit is written into
+  PyMOL's view matrix.
+- **Reflections are rejected.** A mirror image fits near-coplanar points at least as well
+  as a rotation does, and a singular value decomposition will happily return one. A
+  mirrored molecule in a figure is a drawing of the other enantiomer, so the determinant
+  is forced positive.
+- **The reference frame has a fixed sign convention.** The sign of an eigenvector is
+  arbitrary and so is the handedness of a frame built from three of them, so the largest
+  component of each axis is made positive and the third axis is replaced by the cross
+  product of the first two. Without that, two runs on the same molecules could disagree.
+
+A wrong rotation here does not look wrong: every panel still shows a plausible molecule
+from a plausible angle, which is exactly the failure this setting exists to prevent. The
+tests therefore check the geometry numerically — that the cores coincide once the camera
+rotation is applied — and check PyMOL's view-matrix convention against PyMOL itself.
+
+---
+
+
 ## Steric and shape descriptors
 
 Everything in this section is computed from element symbols and Cartesian coordinates

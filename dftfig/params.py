@@ -965,8 +965,11 @@ G_RENDER = Group(
                      "tensor, which is what you want for flat fused-ring systems - every panel ends up "
                      "oriented the same way, so the reader compares chemistry rather than viewpoint. "
                      "'first_molecule' aligns everything onto the first molecule's frame, which is better "
-                     "for a congeneric series that shares a scaffold. 'none' keeps the ORCA orientation, "
-                     "which is essentially arbitrary.",
+                     "for a congeneric series that shares a scaffold: the maximum common substructure is "
+                     "found across the whole set, the first molecule's copy of it defines the frame, and "
+                     "every other molecule is least-squares fitted onto that. If the set shares nothing "
+                     "large enough to orient by, dftfig says so and each panel falls back to its own "
+                     "principal axes. 'none' keeps the ORCA orientation, which is essentially arbitrary.",
             choices=[
                 Choice("principal_plane", "Principal plane (inertia tensor)",
                        "Molecular plane parallel to the screen. Best for planar aromatics.",

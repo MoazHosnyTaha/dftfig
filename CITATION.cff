@@ -24,9 +24,9 @@ identifiers:
     description: "Concept DOI - always resolves to the latest version"
   - type: doi
     value: "10.5281/zenodo.24503312"
-    description: "Archived snapshot of version 0.9.1"
+    description: "Archived snapshot of version 0.10.0"
 license: MIT
-version: "0.9.1"
+version: "0.10.0"
 date-released: "2026-11-24"
 repository-code: "https://github.com/MoazHosnyTaha/dftfig"
 keywords:

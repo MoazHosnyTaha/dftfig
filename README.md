@@ -211,7 +211,7 @@ Each release is archived on Zenodo. Cite the DOI, not the repository URL.
 @software{hassanein_dftfig_2026,
   author    = {Hassanein, Moaz H. T.},
   title     = {{dftfig}: an automated ORCA DFT and figure pipeline for molecular structures},
-  version   = {0.9.1},
+  version   = {0.10.0},
   year      = {2026},
   publisher = {Zenodo},
   doi       = {10.5281/zenodo.24472276},
@@ -221,11 +221,11 @@ Each release is archived on Zenodo. Cite the DOI, not the repository URL.
 ```
 
 > Hassanein, M. H. T. (2026). *dftfig: an automated ORCA DFT and figure pipeline for
-> molecular structures* (version 0.9.1) [Computer software]. Zenodo.
+> molecular structures* (version 0.10.0) [Computer software]. Zenodo.
 > https://doi.org/10.5281/zenodo.24472276
 
 `10.5281/zenodo.24472276` always resolves to the latest version. To pin the exact release you ran, use
-its version DOI instead — 0.9.1 is `10.5281/zenodo.24503312`, and every release lists its own on its
+its version DOI instead — 0.10.0 is `10.5281/zenodo.PENDING`, and every release lists its own on its
 Zenodo page.
 
 Use the version you actually ran — `dft --version`, or read it from `descriptors.csv` or

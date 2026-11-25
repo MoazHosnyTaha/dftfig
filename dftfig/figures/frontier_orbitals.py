@@ -14,7 +14,8 @@ import pandas as pd
 from matplotlib.gridspec import GridSpec
 
 from ..figstyle import (band_letter, cell_caption, footnote, footnote_step,
-                        pad_to_common_aspect, show_image, shrink_to_width, wrap_fields)
+                        pad_to_common_aspect, show_image, shrink_to_width, wrap_fields,
+                        wrap_text)
 from ..figureapi import REQ_CUBES, REQ_DESCRIPTORS, REQ_RENDERING, FigureContext
 from ..theme import warn
 
@@ -112,12 +113,38 @@ def build(ctx: FigureContext) -> list:
         f"MEP {mep_note}",
     ]
     n_lines = len(wrap_fields(fig, method_fields, size=6.5))
-    bottom = 0.075 + (n_lines - 1) * footnote_step(fig, 6.5)
+
+    # The title and the colour-bar label wrap on a narrow canvas too, and both sit in a
+    # margin. Measure them here, before the layout is fixed, for the same reason the
+    # footnote is measured here: a margin sized for one line puts the second line of the
+    # title through the panel titles and the second line of the label through the
+    # footnote. At one molecule both of them wrap, and both collisions happened.
+    title_text = (f"Optimized geometry, frontier orbitals and electrostatic potential "
+                  f"in {solvent} ($\\epsilon$ = {ctx.dielectric():g})")
+    title = fig.suptitle(title_text, fontsize=9.5, y=0.985, x=0.055, ha="left")
+    # Shrink first, then wrap if the floor was not enough: a one-line title reads better,
+    # but at a single molecule the canvas is 2.9 in and this sentence is 4.3 in even at
+    # the 7 pt floor, and a silently widened canvas is the worse outcome.
+    title_size = shrink_to_width(fig, title)
+    title.set_text(wrap_text(fig, title_text, size=title_size))
+    title_lines = title.get_text().count("\n") + 1
+
+    scale_note = {"per_panel": "   (each panel scaled separately - NOT comparable)",
+                  "auto_shared": "   (range measured from the surfaces, shared by all "
+                                 "panels)",
+                  "fixed": ""}.get(mode, "")
+    cbar_label = wrap_text(fig, "electrostatic potential V(r) / a.u." + scale_note,
+                           size=7)
+    cbar_lines = cbar_label.count("\n") + 1
+
+    bottom = (0.075 + (n_lines - 1) * footnote_step(fig, 6.5)
+              + (cbar_lines - 1) * footnote_step(fig, 7))
+    top = 0.945 - (title_lines - 1) * footnote_step(fig, title_size)
 
     gs = GridSpec(5, ncol, figure=fig,
                   height_ratios=[1.05, 1.0, 1.0, 1.15, 0.085],
                   hspace=0.16, wspace=0.03,
-                  left=0.055, right=0.985, top=0.945, bottom=bottom)
+                  left=0.055, right=0.985, top=top, bottom=bottom)
     label_style = ctx.param("figures.panel_label_style")
 
     # Row A - optimized geometries, flagged if they are not true minima
@@ -192,10 +219,7 @@ def build(ctx: FigureContext) -> list:
     ticks = np.linspace(vrange[0], vrange[1], 5)
     cax.set_xticks(ticks)
     cax.set_xticklabels([f"{t:+.3f}" for t in ticks])
-    note = {"per_panel": "   (each panel scaled separately - NOT comparable)",
-            "auto_shared": "   (range measured from the surfaces, shared by all panels)",
-            "fixed": ""}.get(mode, "")
-    cax.set_xlabel("electrostatic potential V(r) / a.u." + note, fontsize=7, labelpad=1)
+    cax.set_xlabel(cbar_label, fontsize=7, labelpad=1)
     for s in ("top", "right", "left"):
         cax.spines[s].set_visible(False)
     cax.text(vrange[0], 1.35, "electron-rich", fontsize=6.5, ha="left", va="bottom")
@@ -205,11 +229,6 @@ def build(ctx: FigureContext) -> list:
     band_letter(fig, "B", 0.755, label_style)
     band_letter(fig, "C", 0.330, label_style)
 
-    title = fig.suptitle(
-        f"Optimized geometry, frontier orbitals and electrostatic potential in "
-        f"{solvent} ($\\epsilon$ = {ctx.dielectric():g})",
-        fontsize=9.5, y=0.985, x=0.055, ha="left")
-    shrink_to_width(fig, title)
     footnote(fig, method_fields, x=0.055, y=0.021, size=6.5, color="#707070")
     # Provenance on its own line rather than appended to the method line: that line is
     # already near the figure width at print size, and the two identifiers below are what

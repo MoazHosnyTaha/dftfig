@@ -212,6 +212,38 @@ def wrap_fields(fig, fields, *, size: float, left: float = 0.055,
     return lines
 
 
+def wrap_text(fig, text: str, *, size: float, left: float = 0.055,
+              right: float = 0.985) -> str:
+    """Break `text` on word boundaries into lines that fit the figure width.
+
+    :func:`wrap_fields` packs whole fields and cannot help when one field is itself
+    wider than the figure, which is what happens to a sentence-length axis label on a
+    narrow canvas. With ``bbox_inches="tight"`` that label does not overflow - it widens
+    the saved file, so the panels end up in a canvas sized by a caption.
+    """
+    renderer = fig.canvas.get_renderer()
+    avail = right - left
+
+    def width_of(s: str) -> float:
+        probe = fig.text(0, 0, s, fontsize=size)
+        w = probe.get_window_extent(renderer=renderer).width / fig.bbox.width
+        probe.remove()
+        return w
+
+    lines: list[str] = []
+    current = ""
+    for word in str(text).split():
+        candidate = f"{current} {word}" if current else word
+        if current and width_of(candidate) > avail:
+            lines.append(current)
+            current = word
+        else:
+            current = candidate
+    if current:
+        lines.append(current)
+    return "\n".join(lines)
+
+
 def shrink_to_width(fig, artist, *, left: float = 0.055, right: float = 0.985,
                     min_size: float = 7.0) -> float:
     """Reduce a text artist's size until it fits the figure width. Returns that size.

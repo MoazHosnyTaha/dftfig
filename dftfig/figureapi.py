@@ -152,6 +152,10 @@ class FigureContext:
     #: then for the image does not build the same PDB twice.
     _mlp_cache: dict = field(default_factory=dict, repr=False)
     _geometry_written: set = field(default_factory=set, repr=False)
+    #: Camera rotations for `render.orientation: first_molecule`, computed once per
+    #: figure run. An empty dict means "no shared frame", which leaves every panel on its
+    #: own principal axes; None means "not worked out yet".
+    _view_rotations: dict | None = field(default=None, repr=False)
 
     # ---------------------------------------------------------------- the molecule set
     @property
@@ -326,23 +330,73 @@ class FigureContext:
             if pdb is None:
                 return None
             lo, hi = vrange if vrange is not None else (lo, hi)
-            path = render.render_mlp(self.config, name, pdb, lo, hi)
+            path = render.render_mlp(self.config, name, pdb, lo, hi,
+                                     view_rotation=self.view_rotation(name))
         else:
             self._ensure_geometry(name, medium)
             if kind == "geometry":
-                path = render.render_geometry(self.config, name, medium)
+                path = render.render_geometry(self.config, name, medium,
+                                              view_rotation=self.view_rotation(name))
             elif kind in ("homo", "lumo"):
-                path = render.render_orbital(self.config, name, medium, kind)
+                path = render.render_orbital(self.config, name, medium, kind,
+                                             view_rotation=self.view_rotation(name))
             else:
                 if vrange is None:
                     r = float(self.config["render"]["esp_range"])
                     vrange = (-r, r)
-                path = render.render_mep(self.config, name, medium, vrange)
+                path = render.render_mep(self.config, name, medium, vrange,
+                                         view_rotation=self.view_rotation(name))
 
         if path and Path(path).exists() and self.config["render"]["background"] == "transparent":
             from .figstyle import trim_white
             trim_white(path)
         return path
+
+    def view_rotation(self, name: str) -> list[float] | None:
+        """Camera rotation putting this molecule's shared scaffold in the common frame.
+
+        None unless `render.orientation` is `first_molecule` and a usable common core was
+        found, in which case every panel falls back to its own principal axes - the panels
+        are then still individually sensible, just not in one frame.
+        """
+        return self._shared_frame().get(name)
+
+    def _shared_frame(self) -> dict:
+        if self.config["render"]["orientation"] != "first_molecule":
+            return {}
+        if self._view_rotations is not None:
+            return self._view_rotations
+
+        import numpy as np
+
+        from . import align, parsers
+        from .theme import warn
+        self._view_rotations = {}                # pessimistic: set on success below
+
+        coords = {}
+        for name in self.names:
+            sp = self.run_dir(name, self.reference_solvent) / \
+                f"{name}_{self.reference_solvent}_sp.out"
+            if not sp.exists():
+                return self._view_rotations
+            syms, xyz = parsers.geometry(sp)
+            mol = self.mols.get(name)
+            # The core indices come from the RDKit molecule and are used to pick rows out
+            # of the ORCA geometry, so the two atom orders have to be the same sequence
+            # of elements. They are, because the ORCA input was written from this
+            # molecule - but a mismatch would silently align the wrong atoms, and a
+            # figure drawn in the wrong frame looks plausible.
+            if mol is None or [a.GetSymbol() for a in mol.GetAtoms()] != syms:
+                warn(f"{name}: the optimized geometry and the input molecule do not "
+                     "agree atom for atom, so a shared orientation cannot be trusted - "
+                     "using per-molecule principal axes")
+                return self._view_rotations
+            coords[name] = np.array(xyz)
+
+        cores = align.common_core(self.mols)
+        if cores:
+            self._view_rotations = align.camera_rotations(self.names, cores, coords)
+        return self._view_rotations
 
     def _ensure_geometry(self, name: str, medium: str) -> None:
         if (name, medium) not in self._geometry_written:

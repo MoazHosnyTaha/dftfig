@@ -6,6 +6,53 @@ and this project uses [semantic versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.10.0] - 2026-11-24
+
+### Fixed
+- `render.orientation: first_molecule` did nothing. It has been a documented choice since
+  the parameter existed, promising a least-squares fit of every molecule onto the first
+  by maximum common substructure; what it actually did was fall through to
+  `principal_plane`. The alignment branch in the renderer only fired when it was handed a
+  list of core atom indices, and no caller ever passed one - the argument was a keyword
+  with a default on all four render functions and nothing else.
+
+  It is implemented now, in a new `dftfig/align.py`: the maximum common substructure
+  across the whole set, the first molecule's copy of it as the reference frame, and a
+  Kabsch fit of every other molecule onto that. The camera is what moves - the orbital
+  and electrostatic-potential panels are isosurfaces through a cube, whose values live
+  on a grid fixed in space, so rotating the molecule would leave its own density behind.
+  Sets that share nothing large enough to orient by say so and fall back to per-molecule
+  principal axes.
+
+  Two choices in there are not library defaults and are each pinned by a test:
+  reflections are rejected, because a mirror image fits near-coplanar points at least as
+  well as a rotation and a singular value decomposition will return one - a mirrored
+  molecule in a figure is a drawing of the other enantiomer; and the reference frame has
+  a fixed sign convention, so two runs on the same molecules cannot disagree.
+
+- `frontier_orbitals` still came out wider than its panels at a single molecule - a
+  2.90 in canvas saved as 5.02 in, 42% of it empty. The earlier fix sized the canvas
+  against the title and the method footnote but not against the colour-bar label, which
+  is a sentence and, at one molecule, longer than the whole panel column. The label now
+  wraps, the title wraps once shrinking hits its 7 pt floor, and the margins are measured
+  for the number of lines each actually took - without that last part, fixing the width
+  simply moved the problem, putting the second line of the title through the panel titles
+  and the second line of the label through the footnote.
+
+### Added
+- `figstyle.wrap_text` breaks a string on word boundaries to the figure width.
+  `wrap_fields` packs whole fields and cannot help when one field is itself wider than
+  the figure, which is what happens to a sentence-length axis label on a narrow canvas.
+
+### Changed
+- `frontier_orbitals` went from 12% statement coverage to 97%, and it was the least
+  tested module in the package while being the figure most people look at. Both bugs
+  found in it this month - a matplotlib backend that blocked forever on import, and the
+  over-wide canvas - were on lines no test executed, and the single-molecule case above
+  was found by writing these tests. The renders need PyMOL and a cube; the layout around
+  them does not, and that is where the mistakes were, so the tests supply a context whose
+  panels are unavailable and let everything else run. Package coverage is 63%, from 53%.
+
 ## [0.9.1] - 2026-11-24
 
 ### Fixed
